@@ -16,6 +16,9 @@ const inputCls =
 const RegisterPageInner = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [formData, setFormData] = useState({ name: '', email: '', phone: '', location: '', password: '' });
+    // Public signup may create a plain customer or a retailer. Everything else
+    // (company / dealer) goes through the apply → admin-approve flow.
+    const [accountType, setAccountType] = useState<'user' | 'retailer'>('user');
     const [verifyNotice, setVerifyNotice] = useState<{ email: string; role: string; devVerifyLink?: string } | null>(null);
 
     const router = useRouter();
@@ -48,6 +51,7 @@ const RegisterPageInner = () => {
             phone: formData.phone.trim(),
             location: formData.location.trim(),
             password: formData.password,
+            role: accountType,
         };
         try {
             const res = await register(payload).unwrap();
@@ -132,6 +136,35 @@ const RegisterPageInner = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
+
+                {/* Account type — Customer or Retailer */}
+                <div>
+                    <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">I am a</label>
+                    <div className="grid grid-cols-2 gap-2">
+                        {([
+                            { id: 'user', title: 'Customer', hint: 'Shop for yourself' },
+                            { id: 'retailer', title: 'Retailer', hint: 'Buy for my shop' },
+                        ] as const).map((opt) => {
+                            const on = accountType === opt.id;
+                            return (
+                                <button
+                                    key={opt.id}
+                                    type="button"
+                                    onClick={() => setAccountType(opt.id)}
+                                    aria-pressed={on}
+                                    className={`text-left rounded-lg border px-3.5 py-2.5 transition-all ${
+                                        on
+                                            ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/5 ring-2 ring-[var(--color-primary)]/15'
+                                            : 'border-slate-200 bg-white hover:border-slate-300'
+                                    }`}
+                                >
+                                    <span className={`block text-sm font-bold ${on ? 'text-[var(--color-primary)]' : 'text-slate-700'}`}>{opt.title}</span>
+                                    <span className="block text-[11px] text-slate-400 mt-0.5">{opt.hint}</span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
 
                 {/* Full Name */}
                 <div>

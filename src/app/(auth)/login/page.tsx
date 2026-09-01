@@ -75,7 +75,7 @@ const LoginPageInner = () => {
             // Staff (admin / super admin) ALWAYS land in the admin panel. A redirect
             // param is honored only when it points to an admin route (deep link) — a
             // customer-area redirect must never trap an admin in the user dashboard.
-            const isStaff = user.role === 'admin' || user.role === 'superadmin';
+            const isStaff = user.role === 'admin';
             if (isStaff) {
                 router.push(redirectPath && redirectPath.startsWith('/dashboard/admin') ? redirectPath : '/dashboard/admin');
             } else if (redirectPath) {

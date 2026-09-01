@@ -5,14 +5,15 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAppSelector, useAppDispatch } from '@/redux';
 import { logout } from '@/redux/slices/authSlice';
-import { LuMapPin, LuMail, LuPhone, LuGlobe } from 'react-icons/lu';
+import { LuMapPin, LuMail, LuPhone } from 'react-icons/lu';
 import { FaFacebookF, FaLinkedinIn, FaYoutube, FaInstagram, FaWhatsapp } from 'react-icons/fa';
 import { FaXTwitter, FaTiktok } from 'react-icons/fa6';
 import { toast } from 'react-hot-toast';
 import { useGetSiteContentQuery } from '@/redux/api/siteContentApi';
+import { useLanguage } from '@/lib/i18n/LanguageProvider';
+import Logo from '@/components/shared/Logo';
 import type { IconType } from 'react-icons';
 
-/* ─── Map a social label to its icon (case-insensitive) ─── */
 const SOCIAL_ICONS: { match: string; icon: IconType }[] = [
     { match: 'facebook', icon: FaFacebookF },
     { match: 'instagram', icon: FaInstagram },
@@ -35,6 +36,36 @@ const NewFooter: React.FC = () => {
     const dispatch = useAppDispatch();
     const router = useRouter();
     const { data: siteRes } = useGetSiteContentQuery({});
+    const { lang } = useLanguage();
+    const isBn = lang === 'bn';
+
+    /* Simple in-file translation table for the footer — keeps the labels
+       tightly next to the markup they're used in, so a copy tweak doesn't
+       cost a round-trip through the shared dictionary. Bangla is intentionally
+       everyday-plain, not literary. */
+    const T = {
+        tagline: isBn
+            ? 'বাংলাদেশের বিশ্বস্ত অনলাইন মার্কেটপ্লেস — কম দামে ভালো প্রোডাক্ট, দেশজুড়ে ফাস্ট ডেলিভারি।'
+            : 'A trusted online marketplace across Bangladesh — quality products at fair prices, delivered fast.',
+        quickLinks: isBn ? 'কুইক লিংক' : 'Quick Links',
+        support:    isBn ? 'সাপোর্ট'   : 'Support',
+        weAccept:   isBn ? 'পেমেন্ট'   : 'We Accept',
+        home:       isBn ? 'হোম'                    : 'Home',
+        allProducts:isBn ? 'সব প্রোডাক্ট'          : 'All Products',
+        track:      isBn ? 'অর্ডার ট্র্যাক'         : 'Track Order',
+        companies:  isBn ? 'কোম্পানি'              : 'Companies',
+        dealers:    isBn ? 'ডিলার খুঁজুন'          : 'Find a Dealer',
+        contact:    isBn ? 'যোগাযোগ'               : 'Contact Us',
+        liveChat:   isBn ? 'লাইভ চ্যাট (হোয়াটসঅ্যাপ)' : 'Live Chat (WhatsApp)',
+        myAccount:  isBn ? 'আমার অ্যাকাউন্ট'       : 'My Account',
+        signIn:     isBn ? 'সাইন ইন / রেজিস্টার'   : 'Sign In / Register',
+        subTitle:   isBn ? 'অফার সবার আগে পেতে' : 'Subscribe for updates',
+        subText:    isBn ? 'নতুন অফার, ছাড় ও নতুন প্রোডাক্টের খবর ইনবক্সে সরাসরি পাবেন।' : 'Get new offers, discounts and product updates in your inbox.',
+        emailPlaceholder: isBn ? 'আপনার ইমেইল' : 'Your email',
+        subscribe:  isBn ? 'সাবস্ক্রাইব'   : 'Subscribe',
+        subscribing:isBn ? 'হচ্ছে…'        : 'Subscribing…',
+        developedBy:isBn ? 'ডেভেলপ করেছে' : 'Developed by',
+    };
 
     // ── Newsletter subscribe ──
     const [email, setEmail] = React.useState('');
@@ -43,10 +74,7 @@ const NewFooter: React.FC = () => {
     const handleSubscribe = async (e: React.FormEvent) => {
         e.preventDefault();
         const value = email.trim();
-        if (!value) {
-            toast.error('Please enter your email');
-            return;
-        }
+        if (!value) { toast.error(isBn ? 'ইমেইল দিন' : 'Please enter your email'); return; }
         setSubscribing(true);
         try {
             const res = await fetch(`${API_BASE}/newsletter/subscribe`, {
@@ -55,10 +83,8 @@ const NewFooter: React.FC = () => {
                 body: JSON.stringify({ email: value }),
             });
             const json = await res.json().catch(() => ({}));
-            if (!res.ok) {
-                throw new Error(json?.message || 'Subscription failed');
-            }
-            toast.success(json?.message || 'Subscribed! Thanks for joining our newsletter.');
+            if (!res.ok) throw new Error(json?.message || 'Subscription failed');
+            toast.success(json?.message || (isBn ? 'ধন্যবাদ! সাবস্ক্রাইব সম্পন্ন হয়েছে।' : 'Subscribed! Thanks for joining.'));
             setEmail('');
         } catch (err: any) {
             toast.error(err?.message || 'Subscription failed. Please try again.');
@@ -67,13 +93,13 @@ const NewFooter: React.FC = () => {
         }
     };
 
-    // Social links from DB (admin → site-content). Only show ones with a real URL.
-    const socials: { label: string; url: string }[] = (siteRes?.data?.contact?.socials || [])
-        .filter((s: any) => s?.url && s.url !== '#');
+    // Show every social the admin has toggled ACTIVE — regardless of whether a
+    // URL has been filled in yet. Inactive ones never render. (Old logic keyed
+    // off the URL, which hid links the admin had switched on but not yet
+    // pasted an address for.)
+    const socials: { label: string; url: string; active?: boolean }[] =
+        (siteRes?.data?.contact?.socials || []).filter((s: any) => s?.active !== false && s?.label);
 
-    // Contact info comes from the DB only. Baked-in defaults used to render before
-    // the query resolved, so the old details flashed on every load — and would keep
-    // flashing the stale value once the admin edits them in Settings.
     const contact = siteRes?.data?.contact || {};
     const phoneList: string[] = (Array.isArray(contact.phones) && contact.phones.length > 0)
         ? contact.phones
@@ -81,7 +107,6 @@ const NewFooter: React.FC = () => {
     const contactEmail: string = contact.email || contact.emails?.[0] || '';
     const address: string = contact.address || contact.corporateOffice || '';
 
-    // WhatsApp link for "Live Chat" — normalized to wa.me format (88 + local digits)
     const waDigits = (siteRes?.data?.contact?.whatsapp || siteRes?.data?.floating?.whatsapp || '').replace(/\D/g, '');
     const waNumber = !waDigits ? '' : waDigits.startsWith('880') ? waDigits : waDigits.startsWith('0') ? '88' + waDigits : '880' + waDigits;
     const whatsappLink = waNumber ? `https://wa.me/${waNumber}` : '';
@@ -93,185 +118,195 @@ const NewFooter: React.FC = () => {
         router.push('/');
     };
 
-    return (
-        <footer className="bg-white border-t border-gray-200">
-            {/* ── Main Footer (single section) ── */}
-            <div className="container mx-auto px-4 py-10">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+    /* Full-navy footer: white text on deep navy, yellow used as the accent
+       colour for phone numbers and hovers so the maroon primary is never
+       used in the footer at all. */
+    const NAVY = '#0A2148';
+    const YELLOW = '#FBBF00';
+    const linkCls = 'text-sm text-white/75 hover:text-white transition-colors';
 
-                    {/* Brand + Address + Social */}
-                    <div className="sm:col-span-2 lg:col-span-1">
-                        <div className="space-y-1.5">
-                            {address && (
-                                <div className="flex items-start gap-2.5">
-                                    <LuMapPin size={14} className="text-gray-400 mt-0.5 shrink-0" />
-                                    <p className="text-sm text-gray-500">{address}</p>
-                                </div>
+    return (
+        <footer style={{ background: NAVY }}>
+            {/* Main footer band — deep navy from edge to edge. */}
+            <div style={{ background: NAVY }}>
+                <div className="container mx-auto px-4 py-8">
+                    <div className="grid gap-6 lg:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-12">
+
+                        {/* Brand column — logo + tagline + address + socials */}
+                        <div className="sm:col-span-2 lg:col-span-4">
+                            <div className="mb-3">
+                                <Logo imgClassName="h-[52px] md:h-[60px]" />
+                            </div>
+                            <p className="text-sm text-white/75 leading-relaxed max-w-sm">
+                                {T.tagline}
+                            </p>
+
+                            {(address || contactEmail || phoneList[0]) && (
+                                <ul className="mt-5 space-y-2">
+                                    {address && (
+                                        <li className="flex items-start gap-2.5 text-sm text-white/85">
+                                            <LuMapPin size={15} className="mt-0.5 shrink-0" style={{ color: YELLOW }} />
+                                            <span>{address}</span>
+                                        </li>
+                                    )}
+                                    {phoneList[0] && (
+                                        <li className="flex items-center gap-2.5 text-sm">
+                                            <LuPhone size={15} className="shrink-0" style={{ color: YELLOW }} />
+                                            <a href={`tel:${phoneList[0]}`} className="font-semibold text-white hover:text-white/80 transition-colors">
+                                                {phoneList[0]}
+                                            </a>
+                                        </li>
+                                    )}
+                                    {contactEmail && (
+                                        <li className="flex items-center gap-2.5 text-sm text-white/85">
+                                            <LuMail size={15} className="shrink-0" style={{ color: YELLOW }} />
+                                            <a href={`mailto:${contactEmail}`} className="hover:text-white transition-colors break-all">
+                                                {contactEmail}
+                                            </a>
+                                        </li>
+                                    )}
+                                </ul>
                             )}
-                            {contactEmail && (
-                                <div className="flex items-center gap-2.5">
-                                    <LuMail size={14} className="text-gray-400 shrink-0" />
-                                    <a href={`mailto:${contactEmail}`} className="text-sm text-gray-500 hover:text-[var(--color-primary)] transition-colors break-all">{contactEmail}</a>
+
+                            {socials.length > 0 && (
+                                <div className="flex flex-wrap items-center gap-2.5 mt-5">
+                                    {socials.map((s, i) => {
+                                        const Icon = getSocialIcon(s.label);
+                                        const hasUrl = !!s.url && s.url !== '#';
+                                        return (
+                                            <a
+                                                key={`${s.label}-${i}`}
+                                                href={hasUrl ? s.url : '#'}
+                                                {...(hasUrl ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                                                aria-label={s.label}
+                                                title={s.label}
+                                                className="w-9 h-9 rounded-full flex items-center justify-center transition-transform hover:-translate-y-0.5"
+                                                style={{ background: 'rgba(255,255,255,0.12)', color: '#fff' }}
+                                            >
+                                                <Icon size={15} />
+                                            </a>
+                                        );
+                                    })}
                                 </div>
                             )}
                         </div>
-                        {/* Social Icons — dynamic from admin / site-content */}
-                        {socials.length > 0 && (
-                            <div className="flex items-center gap-3 mt-4">
-                                {socials.map((s) => {
-                                    const Icon = getSocialIcon(s.label);
-                                    return (
-                                        <a
-                                            key={s.label}
-                                            href={s.url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            aria-label={s.label}
-                                            className="w-8 h-8 bg-gray-900 rounded-full flex items-center justify-center text-white hover:bg-[var(--color-primary)] transition-colors"
-                                        >
-                                            <Icon size={14} />
-                                        </a>
-                                    );
-                                })}
-                            </div>
-                        )}
-                    </div>
 
-                    {/* Menu 1 - Quick Links */}
-                    <div>
-                        <h4 className="text-sm font-bold text-gray-900 mb-4 uppercase tracking-wide">Quick Links</h4>
-                        <ul className="space-y-2.5">
-                            <li><Link href="/" className="text-sm text-gray-500 hover:text-[var(--color-primary)] transition-colors">Home</Link></li>
-                            <li><Link href="/products" className="text-sm text-gray-500 hover:text-[var(--color-primary)] transition-colors">All Products</Link></li>
-                            <li><Link href="/track" className="text-sm text-gray-500 hover:text-[var(--color-primary)] transition-colors">Track Order</Link></li>
-                            <li><Link href="/companies" className="text-sm text-gray-500 hover:text-[var(--color-primary)] transition-colors">Companies</Link></li>
-                            <li><Link href="/dealers" className="text-sm text-gray-500 hover:text-[var(--color-primary)] transition-colors">Find a Dealer</Link></li>
-                            <li><Link href="/contact" className="text-sm text-gray-500 hover:text-[var(--color-primary)] transition-colors">Contact Us</Link></li>
-                        </ul>
-                    </div>
+                        {/* Quick Links */}
+                        <div className="lg:col-span-2">
+                            <h4 className="text-sm font-extrabold text-white mb-4 uppercase tracking-wide">{T.quickLinks}</h4>
+                            <ul className="space-y-2.5">
+                                <li><Link href="/" className={linkCls}>{T.home}</Link></li>
+                                <li><Link href="/products" className={linkCls}>{T.allProducts}</Link></li>
+                                <li><Link href="/track" className={linkCls}>{T.track}</Link></li>
+                                <li><Link href="/companies" className={linkCls}>{T.companies}</Link></li>
+                                <li><Link href="/dealers" className={linkCls}>{T.dealers}</Link></li>
+                                <li><Link href="/contact" className={linkCls}>{T.contact}</Link></li>
+                            </ul>
+                        </div>
 
-                    {/* Menu 2 - Support */}
-                    <div>
-                        <h4 className="text-sm font-bold text-gray-900 mb-4 uppercase tracking-wide">Support</h4>
-                        <ul className="space-y-2.5">
-                            {phoneList.map((p, i) => {
-                                const digits = p.replace(/\D/g, '');
-                                const tel = digits.startsWith('880') ? `+${digits}` : digits.startsWith('0') ? `+880${digits.slice(1)}` : `+880${digits}`;
-                                return (
+                        {/* Support */}
+                        <div className="lg:col-span-3">
+                            <h4 className="text-sm font-extrabold text-white mb-4 uppercase tracking-wide">{T.support}</h4>
+                            <ul className="space-y-2.5">
+                                {phoneList.slice(1).map((p) => (
                                     <li key={p}>
-                                        <a href={`tel:${tel}`} className={`flex items-center gap-2 text-sm ${i === 0 ? 'font-semibold text-[var(--color-primary)] hover:underline' : 'text-gray-500 hover:text-[var(--color-primary)] transition-colors'}`}>
-                                            <LuPhone size={14} /> {p}
+                                        <a href={`tel:${p}`} className={linkCls}>
+                                            <LuPhone size={12} className="inline mr-1.5 align-middle" /> {p}
                                         </a>
                                     </li>
-                                );
-                            })}
-                            {whatsappLink && <li><a href={whatsappLink} target="_blank" rel="noopener noreferrer" className="text-sm text-gray-500 hover:text-[var(--color-primary)] transition-colors">Live Chat (WhatsApp)</a></li>}
-                            {isAuthenticated ? (
-                                <li><Link href={user?.role === 'admin' ? '/dashboard/admin' : '/dashboard/user'} className="text-sm text-gray-500 hover:text-[var(--color-primary)] transition-colors">My Account</Link></li>
-                            ) : (
-                                <li><Link href="/login" className="text-sm text-gray-500 hover:text-[var(--color-primary)] transition-colors">Sign In / Register</Link></li>
-                            )}
-                        </ul>
-                    </div>
+                                ))}
+                                {whatsappLink && (
+                                    <li>
+                                        <a href={whatsappLink} target="_blank" rel="noopener noreferrer" className={linkCls}>
+                                            <FaWhatsapp className="inline mr-1.5 align-middle" size={12} />
+                                            {T.liveChat}
+                                        </a>
+                                    </li>
+                                )}
+                                {isAuthenticated ? (
+                                    <>
+                                        <li>
+                                            <Link href={user?.role === 'admin' ? '/dashboard/admin' : '/dashboard/user'} className={linkCls}>
+                                                {T.myAccount}
+                                            </Link>
+                                        </li>
+                                        <li>
+                                            <button onClick={handleLogout} className={linkCls} style={{ background: 'none', border: 0, padding: 0, cursor: 'pointer' }}>
+                                                {isBn ? 'লগআউট' : 'Logout'}
+                                            </button>
+                                        </li>
+                                    </>
+                                ) : (
+                                    <li><Link href="/login" className={linkCls}>{T.signIn}</Link></li>
+                                )}
+                                <li><Link href="/terms" className={linkCls}>{isBn ? 'শর্তাবলি' : 'Terms & Conditions'}</Link></li>
+                                <li><Link href="/privacy" className={linkCls}>{isBn ? 'গোপনীয়তা নীতি' : 'Privacy Policy'}</Link></li>
+                                <li><Link href="/refund" className={linkCls}>{isBn ? 'রিফান্ড নীতি' : 'Refund Policy'}</Link></li>
+                            </ul>
+                        </div>
 
-                    {/* Payment Methods */}
-                    <div>
-                        <h4 className="text-sm font-bold text-gray-900 mb-4 uppercase tracking-wide">We Accept</h4>
-                        <div className="grid grid-cols-4 gap-2">
-                            <div className="bg-white border border-gray-200 rounded-md px-2 py-2 flex items-center justify-center h-9">
-                                <span className="text-xs font-bold tracking-tight" style={{ color: '#1A1F71' }}>VISA</span>
-                            </div>
-                            <div className="bg-white border border-gray-200 rounded-md px-2 py-2 flex items-center justify-center h-9">
-                                <div className="flex items-center gap-0.5">
-                                    <div className="w-3.5 h-3.5 rounded-full bg-[#EB001B] opacity-80" />
-                                    <div className="w-3.5 h-3.5 rounded-full bg-[#F79E1B] opacity-80 -ml-2" />
+                        {/* Newsletter + payments */}
+                        <div className="lg:col-span-3">
+                            <h4 className="text-sm font-extrabold text-white mb-3 uppercase tracking-wide">{T.subTitle}</h4>
+                            <p className="text-xs text-white/70 mb-3 leading-relaxed">{T.subText}</p>
+                            <form onSubmit={handleSubscribe} className="flex flex-col gap-2">
+                                <input
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    placeholder={T.emailPlaceholder}
+                                    aria-label="Email address"
+                                    disabled={subscribing}
+                                    className="w-full rounded-md border border-white/20 bg-white/10 px-3.5 py-2.5 text-sm text-white placeholder-white/50 focus:outline-none focus:border-white focus:ring-1 focus:ring-white/40 disabled:opacity-60"
+                                />
+                                <button
+                                    type="submit"
+                                    disabled={subscribing}
+                                    className="w-full rounded-md px-5 py-2.5 text-sm font-bold disabled:opacity-60"
+                                    style={{ background: YELLOW, color: NAVY }}
+                                >
+                                    {subscribing ? T.subscribing : T.subscribe}
+                                </button>
+                            </form>
+
+                            <div className="mt-6">
+                                <h4 className="text-[11px] font-extrabold text-white mb-2 uppercase tracking-wide">{T.weAccept}</h4>
+                                {/* SSLCommerz "Pay With" strip — a white rounded panel so the
+                                    logos stay legible on the dark navy footer. */}
+                                <div className="rounded-lg bg-white p-2.5 shadow-sm">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img
+                                        src="/payment-methods.png"
+                                        alt="Accepted payment methods — Visa, Mastercard, American Express, bKash, Rocket, Nagad and more via SSLCommerz"
+                                        className="w-full h-auto"
+                                        loading="lazy"
+                                    />
                                 </div>
                             </div>
-                            <div className="bg-white border border-gray-200 rounded-md px-2 py-2 flex items-center justify-center h-9">
-                                <span className="text-[10px] font-bold" style={{ color: '#D12053' }}>bKash</span>
-                            </div>
-                            <div className="bg-white border border-gray-200 rounded-md px-2 py-2 flex items-center justify-center h-9">
-                                <span className="text-[10px] font-bold" style={{ color: '#F6921E' }}>Nagad</span>
-                            </div>
-                            <div className="bg-white border border-gray-200 rounded-md px-2 py-2 flex items-center justify-center h-9">
-                                <span className="text-[10px] font-bold" style={{ color: '#8B2F8B' }}>Rocket</span>
-                            </div>
-                            <div className="bg-white border border-gray-200 rounded-md px-2 py-2 flex items-center justify-center h-9">
-                                <span className="text-[9px] font-bold" style={{ color: '#00529B' }}>DBBL</span>
-                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* ── Newsletter ── */}
-            <div className="border-t border-gray-200">
-                <div className="container mx-auto px-4 py-7">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
-                        <div>
-                            <h4 className="text-sm font-bold text-gray-900 uppercase tracking-wide">Subscribe to our newsletter</h4>
-                            <p className="mt-1 text-sm text-gray-500">Get the latest deals, offers and product updates straight to your inbox.</p>
-                        </div>
-                        <form onSubmit={handleSubscribe} className="flex w-full max-w-md items-stretch gap-2">
-                            <input
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                placeholder="Enter your email"
-                                aria-label="Email address"
-                                disabled={subscribing}
-                                className="flex-1 min-w-0 rounded-md border border-gray-300 px-3.5 py-2.5 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)] disabled:opacity-60"
-                            />
-                            <button
-                                type="submit"
-                                disabled={subscribing}
-                                className="shrink-0 rounded-md px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
-                                style={{ background: 'var(--color-primary)' }}
-                            >
-                                {subscribing ? 'Subscribing…' : 'Subscribe'}
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            {/* ── Bottom Footer ── */}
-            <div className="border-t border-gray-200">
+            {/* Copyright strip — same navy, a hairline separates it. */}
+            <div style={{ background: NAVY, borderTop: '1px solid rgba(255,255,255,0.10)' }}>
                 <div className="container mx-auto px-4 py-4">
                     <div className="flex flex-col md:flex-row items-center justify-between gap-2">
-                        <p className="text-xs text-gray-400">
-                            © 2019-{new Date().getFullYear()} Mawa Homebazar BD. All Rights Reserved.
+                        <p className="text-xs text-white/60">
+                            © {new Date().getFullYear()} Safwan · Mawa Homebazar BD.
                         </p>
                         <div className="flex items-center gap-3">
-                            <span className="text-xs text-gray-400">
-                                Developed by{' '}
+                            <span className="text-xs text-white/60">
+                                {T.developedBy}{' '}
                                 <a
                                     href="https://www.extrainweb.com/"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="font-semibold text-gray-500 hover:text-[var(--color-primary)] transition-colors"
+                                    className="font-semibold text-white/85 hover:text-white transition-colors"
                                 >
                                     Extrain Web
                                 </a>
                             </span>
-                            <a
-                                href="https://www.facebook.com/extrainweb"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                aria-label="Extrain Web on Facebook"
-                                className="text-gray-400 hover:text-[var(--color-primary)] transition-colors"
-                            >
-                                <FaFacebookF size={14} />
-                            </a>
-                            <a
-                                href="https://www.extrainweb.com/"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                aria-label="Extrain Web website"
-                                className="text-gray-400 hover:text-[var(--color-primary)] transition-colors"
-                            >
-                                <LuGlobe size={14} />
-                            </a>
                         </div>
                     </div>
                 </div>

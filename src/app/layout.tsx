@@ -4,7 +4,7 @@ import { ReduxProvider } from "@/redux";
 import FloatingContact from "@/components/shared/FloatingContact";
 import { ThemeProvider } from "@/components/shared/ThemeProvider";
 import { LanguageProvider } from "@/lib/i18n/LanguageProvider";
-import { brandCssVariables, brandFaviconDataUri, brandFontsHref } from "@/config/brand";
+import { brandCssVariables, brandFontsHref } from "@/config/brand";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.mawahomebazarbd.com"),
@@ -16,16 +16,11 @@ export const metadata: Metadata = {
   keywords: ["mawa homebazar bd", "mawahomebazarbd", "online shopping", "ecommerce", "bangladesh", "marketplace", "best deals", "products"],
   applicationName: "Mawa Homebazar BD",
   alternates: { canonical: "/" },
-  // The bag emblem alone — the full lockup's wordmark is illegible at 16–32px.
-  // Both entries draw the same mark: the file for clients that want a URL, the
-  // inline data URI (brand-colour tile) for those that skip SVG favicons.
-  icons: {
-    icon: [
-      { url: '/logo-mark.svg', type: 'image/svg+xml', sizes: 'any' },
-      { url: brandFaviconDataUri() },
-    ],
-    apple: '/logo-mark.svg',
-  },
+  // The browser-tab icon and iOS home-screen icon come from the Safwan logo
+  // via the Next.js file convention — `src/app/icon.jpeg` and
+  // `src/app/apple-icon.jpeg`. Next.js serves them with content-hashed URLs,
+  // which sidesteps the aggressive favicon caching that made the metadata-URL
+  // approach unreliable. No `icons` field is needed here as a result.
   openGraph: {
     type: "website",
     siteName: "Mawa Homebazar BD",
@@ -49,8 +44,33 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" translate="no" suppressHydrationWarning>
       <head>
+        {/* The app ships its own Bangla/English switcher, so browser auto-
+            translation is unwanted — and worse, Google Translate rewrites text
+            nodes underneath React, which then crashes on its next render with
+            "Failed to execute 'insertBefore'". These two lines tell the browser
+            not to translate the page, removing that whole class of crash. */}
+        <meta name="google" content="notranslate" />
+        {/* ── DOM-mutation crash guard ──
+            The notranslate hints above stop Chrome's *built-in* translator, but
+            third-party extensions (Google Translate add-ons, Grammarly, ad
+            blockers, AI assistants, password managers) ignore them and still
+            rewrite the DOM underneath React. On its next render React calls
+            removeChild / insertBefore on a node the extension already moved,
+            which throws a NotFoundError that white-screens the whole app
+            ("Failed to execute 'removeChild' on 'Node': The node to be removed
+            is not a child of this node."). These two guards make those calls a
+            graceful no-op when the parent link is broken, so a misbehaving
+            extension can never crash the page. It is an inline <head> script on
+            purpose: it must patch the prototype *before* React hydrates, and the
+            whole thing is wrapped in try/catch so it can never break the page. */}
+        <script
+            dangerouslySetInnerHTML={{
+                __html:
+                    '(function(){try{if(typeof Node!=="function"||!Node.prototype)return;var P=Node.prototype;var r=P.removeChild;P.removeChild=function(c){if(c&&c.parentNode!==this)return c;return r.apply(this,arguments);};var i=P.insertBefore;P.insertBefore=function(n,ref){if(ref&&ref.parentNode!==this)return n;return i.apply(this,arguments);};}catch(e){}})();',
+            }}
+        />
         {/* Brand palette — generated from the single BRAND_PRIMARY constant in
             src/config/brand.ts and inlined server-side, so every
             var(--color-primary) resolves on the first paint (no colour flash). */}
@@ -62,7 +82,11 @@ export default function RootLayout({
             stale font request left behind. */}
         <link href={brandFontsHref()} rel="stylesheet" />
       </head>
-      <body>
+      {/* suppressHydrationWarning: browser extensions (ColorZilla adds
+          `cz-shortcut-listen`, Grammarly, etc.) inject attributes onto <body>
+          before React hydrates, which otherwise trips a harmless hydration
+          mismatch warning. This silences only <body>'s own attribute diff. */}
+      <body suppressHydrationWarning>
         <ReduxProvider>
           <ThemeProvider>
             {/* Bangla/English lives above the whole tree — the header toggle and

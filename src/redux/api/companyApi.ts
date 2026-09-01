@@ -19,6 +19,11 @@ export const companyApi = baseApi.injectEndpoints({
             query: (data) => ({ url: '/companies/apply', method: 'POST', body: data }),
             invalidatesTags: ['Companies', 'Partners'],
         }),
+        // Admin creates a company + its owner login account — POST /api/companies
+        adminCreateCompany: builder.mutation({
+            query: (data: Record<string, unknown>) => ({ url: '/companies', method: 'POST', body: data }),
+            invalidatesTags: ['Companies', 'Partners'],
+        }),
         getMyCompany: builder.query({
             query: () => '/companies/me',
             providesTags: ['Companies', 'Partners'],
@@ -117,6 +122,7 @@ export const {
     useGetPublicCompaniesQuery,
     useGetCompanyBySlugQuery,
     useApplyCompanyMutation,
+    useAdminCreateCompanyMutation,
     useGetMyCompanyQuery,
     useUpdateMyCompanyMutation,
     useGetCompaniesQuery,

@@ -7,6 +7,7 @@ import dynamic from 'next/dynamic';
 import {
     LuPhone, LuMessageCircle, LuLayoutDashboard, LuFileText, LuImage,
     LuSave, LuPlus, LuTrash2, LuCircleCheck, LuArrowUp, LuArrowDown, LuCreditCard,
+    LuHouse, LuInfo, LuGrid2X2, LuStar, LuTags, LuListChecks, LuAward, LuQuote,
 } from 'react-icons/lu';
 import { SingleImageUploader, MultipleImageUploader } from '@/components/ui/ImageUploader';
 
@@ -25,6 +26,14 @@ const btnSmall: React.CSSProperties = { ...btn, background: '#f3f4f6', color: '#
 /* ─── Tabs Config ─── */
 const TABS = [
     { key: 'hero', label: '🖼️ Hero Slides', icon: LuImage },
+    { key: 'stats', label: 'Stats Bar', icon: LuHouse },
+    { key: 'about', label: 'About Section', icon: LuInfo },
+    { key: 'services', label: 'Services', icon: LuGrid2X2 },
+    { key: 'features', label: 'Features', icon: LuStar },
+    { key: 'catShowcase', label: 'Category Showcase', icon: LuTags },
+    { key: 'howItWorks', label: 'How It Works', icon: LuListChecks },
+    { key: 'experience', label: 'Experience', icon: LuAward },
+    { key: 'reviews', label: 'Reviews', icon: LuQuote },
     { key: 'contact', label: 'Contact Page', icon: LuPhone },
     { key: 'payment', label: 'Payment Numbers', icon: LuCreditCard },
     { key: 'floating', label: 'Floating Widget', icon: LuMessageCircle },
@@ -45,17 +54,30 @@ export default function SiteContentPage() {
         }
     }, [res]);
 
+    // Maps a tab key to the top-level siteContent field(s) that the tab edits.
+    // Adding a new tab? Add its field name(s) here.
+    const TAB_TO_FIELDS: Record<string, string[]> = {
+        hero:        ['heroSlides', 'homeBanner'],
+        stats:       ['statsBar'],
+        about:       ['aboutSection'],
+        services:    ['servicesSection'],
+        features:    ['featuresSection'],
+        catShowcase: ['categoryShowcaseSection'],
+        howItWorks:  ['howItWorksSection'],
+        experience:  ['experienceSection'],
+        reviews:     ['reviewsSection'],
+        contact:     ['contact'],
+        payment:     ['payment'],
+        floating:    ['floating'],
+        footer:      ['footer'],
+    };
+
     const handleSave = async () => {
         if (activeTab === 'legal') return; // Legal pages have their own save
         try {
+            const fields = TAB_TO_FIELDS[activeTab] || [activeTab];
             const payload: any = {};
-            if (activeTab === 'hero') {
-                // The Hero tab owns both the carousel slides and the mid-page promo banner.
-                payload.heroSlides = formData.heroSlides;
-                payload.homeBanner = formData.homeBanner;
-            } else {
-                payload[activeTab] = formData[activeTab];
-            }
+            for (const f of fields) payload[f] = formData[f];
             await updateContent(payload).unwrap();
             setSaveSuccess(true);
             setTimeout(() => setSaveSuccess(false), 2000);
@@ -111,11 +133,575 @@ export default function SiteContentPage() {
 
             {/* Tab Content */}
             {activeTab === 'hero' && <HeroSlidesTab data={formData} setData={setFormData} onSave={handleSave} isSaving={isSaving} />}
+            {activeTab === 'stats' && <StatsBarTab data={formData} setData={setFormData} />}
+            {activeTab === 'about' && <AboutSectionTab data={formData} setData={setFormData} />}
+            {activeTab === 'services' && <ServicesSectionTab data={formData} setData={setFormData} />}
+            {activeTab === 'features' && <FeaturesSectionTab data={formData} setData={setFormData} />}
+            {activeTab === 'catShowcase' && <CategoryShowcaseTab data={formData} setData={setFormData} />}
+            {activeTab === 'howItWorks' && <HowItWorksTab data={formData} setData={setFormData} />}
+            {activeTab === 'experience' && <ExperienceSectionTab data={formData} setData={setFormData} />}
+            {activeTab === 'reviews' && <ReviewsSectionTab data={formData} setData={setFormData} />}
             {activeTab === 'contact' && <ContactTab data={formData} setData={setFormData} />}
             {activeTab === 'payment' && <PaymentTab data={formData} setData={setFormData} />}
             {activeTab === 'floating' && <FloatingTab data={formData} setData={setFormData} />}
             {activeTab === 'footer' && <FooterTab data={formData} setData={setFormData} />}
             {activeTab === 'legal' && <LegalPagesTab />}
+        </div>
+    );
+}
+
+/* ═══════════════════════════════════════════════════════════════════ */
+/* ─── Shared helpers for the six home-section editors ─── */
+/* ═══════════════════════════════════════════════════════════════════ */
+
+/**
+ * Section-enabled toggle — every home section can be turned off entirely.
+ * Rendered at the top of each tab so the admin sees the switch first.
+ */
+function EnabledToggle({
+    enabled, onChange, hint,
+}: { enabled: boolean; onChange: (v: boolean) => void; hint?: string }) {
+    return (
+        <div
+            style={{
+                ...card,
+                background: enabled ? 'var(--color-primary-lightest)' : '#fef2f2',
+                borderColor: enabled ? '#bbf7d0' : '#fecaca',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px',
+            }}
+        >
+            <div>
+                <div style={{ fontSize: '13px', fontWeight: 700, color: enabled ? '#16a34a' : '#dc2626' }}>
+                    {enabled ? 'Section is Visible on Homepage' : 'Section is Hidden'}
+                </div>
+                {hint && <div style={{ fontSize: '11px', color: '#666', marginTop: '2px' }}>{hint}</div>}
+            </div>
+            <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                <input
+                    type="checkbox"
+                    checked={enabled}
+                    onChange={(e) => onChange(e.target.checked)}
+                    style={{ width: '18px', height: '18px', accentColor: 'var(--color-primary)', cursor: 'pointer' }}
+                />
+                <span style={{ fontSize: '12px', fontWeight: 600, color: '#333' }}>Show</span>
+            </label>
+        </div>
+    );
+}
+
+/** Move an array element up or down (used by every list editor below). */
+function moveItem<T>(arr: T[], idx: number, dir: 'up' | 'down'): T[] {
+    const swap = dir === 'up' ? idx - 1 : idx + 1;
+    if (swap < 0 || swap >= arr.length) return arr;
+    const next = [...arr];
+    [next[idx], next[swap]] = [next[swap], next[idx]];
+    return next.map((it: any, i: number) => ({ ...it, order: i }));
+}
+
+/* ─────────────────── Bilingual inputs ─────────────────── */
+// Every string in the home-section schema is `{ en, bn }` — old plain-string
+// values are read forward with `readBi`, but everything written back to the
+// server goes as the object shape so the frontend can render the right one.
+
+type Bi = { en?: string; bn?: string } | string | null | undefined;
+
+/** Read a possibly-legacy field as `{ en, bn }` so both inputs render. */
+function readBi(v: Bi): { en: string; bn: string } {
+    if (v == null) return { en: '', bn: '' };
+    if (typeof v === 'string') return { en: v, bn: v };
+    return { en: v.en || '', bn: v.bn || '' };
+}
+
+/** Small side-by-side EN + BN input, one line each — for titles and short fields. */
+function BiInput({
+    label: labelText, value, onChange, placeholderEn, placeholderBn,
+}: {
+    label: string;
+    value: Bi;
+    onChange: (v: { en: string; bn: string }) => void;
+    placeholderEn?: string;
+    placeholderBn?: string;
+}) {
+    const cur = readBi(value);
+    return (
+        <div>
+            <label style={label}>{labelText}</label>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                <div style={{ position: 'relative' }}>
+                    <span style={badge}>EN</span>
+                    <input
+                        value={cur.en}
+                        onChange={e => onChange({ ...cur, en: e.target.value })}
+                        placeholder={placeholderEn}
+                        style={{ ...input, paddingLeft: '38px' }}
+                    />
+                </div>
+                <div style={{ position: 'relative' }}>
+                    <span style={{ ...badge, background: '#fef3c7', color: '#92400e' }}>BN</span>
+                    <input
+                        value={cur.bn}
+                        onChange={e => onChange({ ...cur, bn: e.target.value })}
+                        placeholder={placeholderBn}
+                        style={{ ...input, paddingLeft: '38px' }}
+                    />
+                </div>
+            </div>
+        </div>
+    );
+}
+
+/** Same, but with textareas — for descriptions and long paragraphs. */
+function BiTextarea({
+    label: labelText, value, onChange, rows = 4, placeholderEn, placeholderBn,
+}: {
+    label: string;
+    value: Bi;
+    onChange: (v: { en: string; bn: string }) => void;
+    rows?: number;
+    placeholderEn?: string;
+    placeholderBn?: string;
+}) {
+    const cur = readBi(value);
+    const ta: React.CSSProperties = { ...input, paddingLeft: '38px', resize: 'vertical' as const, fontFamily: 'inherit', lineHeight: 1.55 };
+    return (
+        <div>
+            <label style={label}>{labelText}</label>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                <div style={{ position: 'relative' }}>
+                    <span style={badge}>EN</span>
+                    <textarea
+                        value={cur.en}
+                        onChange={e => onChange({ ...cur, en: e.target.value })}
+                        placeholder={placeholderEn}
+                        rows={rows}
+                        style={ta}
+                    />
+                </div>
+                <div style={{ position: 'relative' }}>
+                    <span style={{ ...badge, background: '#fef3c7', color: '#92400e' }}>BN</span>
+                    <textarea
+                        value={cur.bn}
+                        onChange={e => onChange({ ...cur, bn: e.target.value })}
+                        placeholder={placeholderBn}
+                        rows={rows}
+                        style={ta}
+                    />
+                </div>
+            </div>
+        </div>
+    );
+}
+
+const badge: React.CSSProperties = {
+    position: 'absolute',
+    top: '11px',
+    left: '6px',
+    background: '#e0f2fe',
+    color: '#075985',
+    fontSize: '10px',
+    fontWeight: 700,
+    padding: '2px 6px',
+    borderRadius: '4px',
+    lineHeight: 1,
+    pointerEvents: 'none',
+    zIndex: 2,
+};
+
+/* ─── STATS BAR TAB ─── */
+function StatsBarTab({ data, setData }: { data: any; setData: any }) {
+    const s = data.statsBar || { enabled: true, items: [] };
+    const set = (patch: any) =>
+        setData((p: any) => ({ ...p, statsBar: { ...(p.statsBar || {}), ...patch } }));
+    const setItems = (items: any[]) => set({ items });
+
+    const add = () => setItems([...(s.items || []), { value: '', label: '', icon: '', active: true, order: (s.items || []).length }]);
+    const update = (idx: number, field: string, v: any) => {
+        const items = [...s.items]; items[idx] = { ...items[idx], [field]: v };
+        setItems(items);
+    };
+    const remove = (idx: number) => setItems(s.items.filter((_: any, i: number) => i !== idx));
+    const move = (idx: number, dir: 'up' | 'down') => setItems(moveItem(s.items, idx, dir));
+
+    return (
+        <div>
+            <EnabledToggle
+                enabled={s.enabled !== false}
+                onChange={(v) => set({ enabled: v })}
+                hint="The row of tiles under the hero banner (e.g. “2,00,000+ resellers”)."
+            />
+            <div style={card}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                    <h3 style={{ fontSize: '14px', fontWeight: 700, margin: 0 }}>Highlight Tiles</h3>
+                    <button onClick={add} style={btnSmall}><LuPlus size={13} /> Add Tile</button>
+                </div>
+                {(s.items || []).map((it: any, idx: number) => (
+                    <div key={idx} style={{ border: '1px solid #eee', borderRadius: '8px', padding: '10px', marginBottom: '8px', background: '#fafafa' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '60px 1fr auto auto', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
+                            <input value={it.icon || ''} onChange={e => update(idx, 'icon', e.target.value)} placeholder="🎯" style={{ ...input, textAlign: 'center' }} />
+                            <input value={it.value || ''} onChange={e => update(idx, 'value', e.target.value)} placeholder="2,00,000+ (shown as-is in both languages)" style={input} />
+                            <div style={{ display: 'flex', gap: '2px' }}>
+                                <button onClick={() => move(idx, 'up')} disabled={idx === 0} style={{ ...btnSmall, padding: '6px 8px', opacity: idx === 0 ? 0.3 : 1 }}><LuArrowUp size={12} /></button>
+                                <button onClick={() => move(idx, 'down')} disabled={idx === s.items.length - 1} style={{ ...btnSmall, padding: '6px 8px', opacity: idx === s.items.length - 1 ? 0.3 : 1 }}><LuArrowDown size={12} /></button>
+                            </div>
+                            <button onClick={() => remove(idx)} style={btnDanger}><LuTrash2 size={13} /></button>
+                        </div>
+                        <BiInput label="Label" value={it.label} onChange={v => update(idx, 'label', v)} placeholderEn="Resellers / Dropshippers" placeholderBn="রিসেলার / ড্রপশিপার" />
+                    </div>
+                ))}
+                {(s.items || []).length === 0 && <p style={{ fontSize: '12px', color: '#bbb', textAlign: 'center', padding: '12px' }}>No tiles yet. Click “Add Tile”.</p>}
+            </div>
+        </div>
+    );
+}
+
+/* ─── ABOUT SECTION TAB ─── */
+function AboutSectionTab({ data, setData }: { data: any; setData: any }) {
+    const s = data.aboutSection || {};
+    const set = (patch: any) =>
+        setData((p: any) => ({ ...p, aboutSection: { ...(p.aboutSection || {}), ...patch } }));
+
+    return (
+        <div>
+            <EnabledToggle
+                enabled={s.enabled !== false}
+                onChange={(v) => set({ enabled: v })}
+                hint="About section (text on the left, image on the right) shown near the top of the homepage."
+            />
+            <div style={card}>
+                <div style={{ display: 'grid', gap: '12px' }}>
+                    <BiInput label="Title" value={s.title} onChange={v => set({ title: v })} placeholderEn="About Us" placeholderBn="আমাদের সম্পর্কে" />
+                    <BiTextarea label="Description (long paragraph)" value={s.description} onChange={v => set({ description: v })} rows={7} placeholderEn="A few lines about your company…" placeholderBn="আমাদের কোম্পানি সম্পর্কে দুই-তিন লাইন…" />
+                    <div>
+                        <label style={label}>Image — shown on the right side (landscape works best, e.g. 800×600 / 4:3). Leave blank to show a branded placeholder.</label>
+                        <SingleImageUploader label="About Image" value={s.imageUrl || ''} onChange={(url: string) => set({ imageUrl: url })} />
+                    </div>
+                    <BiInput label="CTA button text (blank = no button)" value={s.ctaLabel} onChange={v => set({ ctaLabel: v })} placeholderEn="Learn More" placeholderBn="বিস্তারিত জানুন" />
+                    <div>
+                        <label style={label}>CTA button link</label>
+                        <input value={s.ctaHref || ''} onChange={e => set({ ctaHref: e.target.value })} style={input} placeholder="/about" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+/* ─── SERVICES TAB ─── */
+function ServicesSectionTab({ data, setData }: { data: any; setData: any }) {
+    const s = data.servicesSection || { enabled: true, items: [] };
+    const set = (patch: any) =>
+        setData((p: any) => ({ ...p, servicesSection: { ...(p.servicesSection || {}), ...patch } }));
+    const setItems = (items: any[]) => set({ items });
+
+    const add = () => setItems([...(s.items || []), { image: '', icon: '', title: '', description: '', link: '', active: true, order: (s.items || []).length }]);
+    const update = (idx: number, field: string, v: any) => {
+        const items = [...s.items]; items[idx] = { ...items[idx], [field]: v }; setItems(items);
+    };
+    const remove = (idx: number) => setItems(s.items.filter((_: any, i: number) => i !== idx));
+    const move = (idx: number, dir: 'up' | 'down') => setItems(moveItem(s.items, idx, dir));
+
+    return (
+        <div>
+            <EnabledToggle enabled={s.enabled !== false} onChange={(v) => set({ enabled: v })} hint="Image cards, 2 per row (up to 16). Tapping a card opens the service-request form. Title & description are optional — an image alone works." />
+            <div style={card}>
+                <div style={{ display: 'grid', gap: '12px' }}>
+                    <BiInput label="Section Title" value={s.title} onChange={v => set({ title: v })} placeholderEn="Our Services" placeholderBn="আমাদের সার্ভিস সমূহ" />
+                    <BiInput label="Subtitle" value={s.subtitle} onChange={v => set({ subtitle: v })} placeholderEn="What our platform offers" placeholderBn="আমাদের প্লাটফর্মে যা পাচ্ছেন" />
+                </div>
+            </div>
+            <div style={card}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                    <h3 style={{ fontSize: '14px', fontWeight: 700, margin: 0 }}>Service Items ({(s.items || []).length})</h3>
+                    <button onClick={add} style={btnSmall}><LuPlus size={13} /> Add Service</button>
+                </div>
+                {(s.items || []).map((it: any, idx: number) => (
+                    <div key={idx} style={{ border: '1px solid #eee', borderRadius: '8px', padding: '12px', marginBottom: '10px', background: '#fafafa' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                            <span style={{ fontSize: '11px', fontWeight: 700, color: '#666' }}>Service {idx + 1}</span>
+                            <div style={{ display: 'flex', gap: '2px' }}>
+                                <button onClick={() => move(idx, 'up')} disabled={idx === 0} style={{ ...btnSmall, padding: '6px 8px', opacity: idx === 0 ? 0.3 : 1 }}><LuArrowUp size={12} /></button>
+                                <button onClick={() => move(idx, 'down')} disabled={idx === s.items.length - 1} style={{ ...btnSmall, padding: '6px 8px', opacity: idx === s.items.length - 1 ? 0.3 : 1 }}><LuArrowDown size={12} /></button>
+                                <button onClick={() => remove(idx)} style={btnDanger}><LuTrash2 size={13} /></button>
+                            </div>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr', gap: '12px', alignItems: 'start' }}>
+                            <SingleImageUploader label="Card image" value={it.image || ''} onChange={(url: string) => update(idx, 'image', url)} />
+                            <div style={{ display: 'grid', gap: '8px' }}>
+                                <BiInput label="Title (optional)" value={it.title} onChange={v => update(idx, 'title', v)} placeholderEn="Service name" placeholderBn="সার্ভিসের নাম" />
+                                <BiInput label="Description (optional)" value={it.description} onChange={v => update(idx, 'description', v)} placeholderEn="Short description" placeholderBn="সংক্ষিপ্ত বিবরণ" />
+                            </div>
+                        </div>
+                    </div>
+                ))}
+                {(s.items || []).length === 0 && <p style={{ fontSize: '12px', color: '#bbb', textAlign: 'center', padding: '12px' }}>No services yet. Click “Add Service”.</p>}
+            </div>
+        </div>
+    );
+}
+
+/* ─── FEATURES TAB ─── */
+function FeaturesSectionTab({ data, setData }: { data: any; setData: any }) {
+    const s = data.featuresSection || { enabled: true, items: [] };
+    const set = (patch: any) =>
+        setData((p: any) => ({ ...p, featuresSection: { ...(p.featuresSection || {}), ...patch } }));
+    const setItems = (items: any[]) => set({ items });
+
+    const add = () => setItems([...(s.items || []), { icon: '✨', title: '', description: '', active: true, order: (s.items || []).length }]);
+    const update = (idx: number, field: string, v: any) => {
+        const items = [...s.items]; items[idx] = { ...items[idx], [field]: v }; setItems(items);
+    };
+    const remove = (idx: number) => setItems(s.items.filter((_: any, i: number) => i !== idx));
+    const move = (idx: number, dir: 'up' | 'down') => setItems(moveItem(s.items, idx, dir));
+
+    return (
+        <div>
+            <EnabledToggle enabled={s.enabled !== false} onChange={(v) => set({ enabled: v })} hint="“Why us” cards with an icon, title and one-line description." />
+            <div style={card}>
+                <div style={{ display: 'grid', gap: '12px' }}>
+                    <BiInput label="Section Title" value={s.title} onChange={v => set({ title: v })} placeholderEn="Our Special Features" placeholderBn="আমাদের স্পেশিয়াল ফিচারস" />
+                    <BiInput label="Subtitle" value={s.subtitle} onChange={v => set({ subtitle: v })} placeholderEn="Why customers choose us" placeholderBn="কেন আমাদের বেছে নেবেন" />
+                </div>
+            </div>
+            <div style={card}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                    <h3 style={{ fontSize: '14px', fontWeight: 700, margin: 0 }}>Feature Items ({(s.items || []).length})</h3>
+                    <button onClick={add} style={btnSmall}><LuPlus size={13} /> Add Feature</button>
+                </div>
+                {(s.items || []).map((it: any, idx: number) => (
+                    <div key={idx} style={{ border: '1px solid #eee', borderRadius: '8px', padding: '10px', marginBottom: '8px', background: '#fafafa' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '60px 1fr auto auto', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
+                            <input value={it.icon || ''} onChange={e => update(idx, 'icon', e.target.value)} placeholder="⚡" style={{ ...input, textAlign: 'center' }} title="Emoji or image URL" />
+                            <span style={{ fontSize: '11px', color: '#666' }}>Feature {idx + 1}</span>
+                            <div style={{ display: 'flex', gap: '2px' }}>
+                                <button onClick={() => move(idx, 'up')} disabled={idx === 0} style={{ ...btnSmall, padding: '6px 8px', opacity: idx === 0 ? 0.3 : 1 }}><LuArrowUp size={12} /></button>
+                                <button onClick={() => move(idx, 'down')} disabled={idx === s.items.length - 1} style={{ ...btnSmall, padding: '6px 8px', opacity: idx === s.items.length - 1 ? 0.3 : 1 }}><LuArrowDown size={12} /></button>
+                            </div>
+                            <button onClick={() => remove(idx)} style={btnDanger}><LuTrash2 size={13} /></button>
+                        </div>
+                        <div style={{ display: 'grid', gap: '8px' }}>
+                            <BiInput label="Feature title" value={it.title} onChange={v => update(idx, 'title', v)} placeholderEn="Feature title" placeholderBn="ফিচারের নাম" />
+                            <BiTextarea label="Feature description" value={it.description} onChange={v => update(idx, 'description', v)} rows={3} placeholderEn="What this feature does…" placeholderBn="এই ফিচার কী করে…" />
+                        </div>
+                    </div>
+                ))}
+                {(s.items || []).length === 0 && <p style={{ fontSize: '12px', color: '#bbb', textAlign: 'center', padding: '12px' }}>No features yet. Click “Add Feature”.</p>}
+            </div>
+        </div>
+    );
+}
+
+/* ─── CATEGORY SHOWCASE TAB ─── */
+function CategoryShowcaseTab({ data, setData }: { data: any; setData: any }) {
+    const s = data.categoryShowcaseSection || {};
+    const set = (patch: any) =>
+        setData((p: any) => ({ ...p, categoryShowcaseSection: { ...(p.categoryShowcaseSection || {}), ...patch } }));
+
+    return (
+        <div>
+            <EnabledToggle
+                enabled={s.enabled !== false}
+                onChange={(v) => set({ enabled: v })}
+                hint="Chip grid of your categories on the homepage. Categories come from the Category admin panel."
+            />
+            <div style={card}>
+                <div style={{ display: 'grid', gap: '12px' }}>
+                    <BiInput label="Title" value={s.title} onChange={v => set({ title: v })} placeholderEn="Our Products" placeholderBn="আমাদের প্রোডাক্ট সমূহ" />
+                    <BiInput label="Subtitle" value={s.subtitle} onChange={v => set({ subtitle: v })} placeholderEn="Optional line under the title" placeholderBn="ঐচ্ছিক সাব-টেক্সট" />
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                        <div>
+                            <label style={label}>Number of categories to show</label>
+                            <input type="number" min={1} max={200} value={s.showCount ?? 60} onChange={e => set({ showCount: Number(e.target.value) || 0 })} style={input} />
+                        </div>
+                        <div>
+                            <label style={label}>Which categories</label>
+                            <select value={s.onlyHome ? 'home' : 'all'} onChange={e => set({ onlyHome: e.target.value === 'home' })} style={input}>
+                                <option value="all">All top-level categories</option>
+                                <option value="home">Only categories flagged “Show on Home”</option>
+                            </select>
+                        </div>
+                    </div>
+                    <p style={{ fontSize: '11px', color: '#888', margin: 0 }}>
+                        Manage the actual categories (name, image, icon, home-flag) in <strong>Dashboard → Categories</strong>.
+                    </p>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+/* ─── HOW IT WORKS TAB ─── */
+function HowItWorksTab({ data, setData }: { data: any; setData: any }) {
+    const s = data.howItWorksSection || { enabled: true, steps: [] };
+    const set = (patch: any) =>
+        setData((p: any) => ({ ...p, howItWorksSection: { ...(p.howItWorksSection || {}), ...patch } }));
+    const setSteps = (steps: any[]) => set({ steps });
+
+    const add = () => setSteps([...(s.steps || []), { step: String((s.steps || []).length + 1), title: '', description: '', active: true, order: (s.steps || []).length }]);
+    const update = (idx: number, field: string, v: any) => {
+        const steps = [...s.steps]; steps[idx] = { ...steps[idx], [field]: v }; setSteps(steps);
+    };
+    const remove = (idx: number) => setSteps(s.steps.filter((_: any, i: number) => i !== idx));
+    const move = (idx: number, dir: 'up' | 'down') => setSteps(moveItem(s.steps, idx, dir));
+
+    return (
+        <div>
+            <EnabledToggle enabled={s.enabled !== false} onChange={(v) => set({ enabled: v })} hint="Numbered steps that walk visitors through your business flow." />
+            <div style={card}>
+                <div style={{ display: 'grid', gap: '12px' }}>
+                    <BiInput label="Section Title" value={s.title} onChange={v => set({ title: v })} placeholderEn="How It Works" placeholderBn="কিভাবে আমাদের মাধ্যমে বিজনেস করবেন" />
+                    <BiInput label="Subtitle" value={s.subtitle} onChange={v => set({ subtitle: v })} placeholderEn="A simple guide to getting started" placeholderBn="শুরু করার সহজ গাইড" />
+                </div>
+            </div>
+            <div style={card}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                    <h3 style={{ fontSize: '14px', fontWeight: 700, margin: 0 }}>Steps ({(s.steps || []).length})</h3>
+                    <button onClick={add} style={btnSmall}><LuPlus size={13} /> Add Step</button>
+                </div>
+                {(s.steps || []).map((it: any, idx: number) => (
+                    <div key={idx} style={{ border: '1px solid #eee', borderRadius: '8px', padding: '10px', marginBottom: '8px', background: '#fafafa' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '60px 1fr auto auto', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
+                            <input value={it.step || ''} onChange={e => update(idx, 'step', e.target.value)} placeholder="১" style={{ ...input, textAlign: 'center', fontWeight: 700 }} title="Step number/symbol (same both languages)" />
+                            <span style={{ fontSize: '11px', color: '#666' }}>Step {idx + 1}</span>
+                            <div style={{ display: 'flex', gap: '2px' }}>
+                                <button onClick={() => move(idx, 'up')} disabled={idx === 0} style={{ ...btnSmall, padding: '6px 8px', opacity: idx === 0 ? 0.3 : 1 }}><LuArrowUp size={12} /></button>
+                                <button onClick={() => move(idx, 'down')} disabled={idx === s.steps.length - 1} style={{ ...btnSmall, padding: '6px 8px', opacity: idx === s.steps.length - 1 ? 0.3 : 1 }}><LuArrowDown size={12} /></button>
+                            </div>
+                            <button onClick={() => remove(idx)} style={btnDanger}><LuTrash2 size={13} /></button>
+                        </div>
+                        <div style={{ display: 'grid', gap: '8px' }}>
+                            <BiInput label="Step title (optional)" value={it.title} onChange={v => update(idx, 'title', v)} placeholderEn="Register" placeholderBn="রেজিস্ট্রেশন" />
+                            <BiTextarea label="Step description" value={it.description} onChange={v => update(idx, 'description', v)} rows={3} placeholderEn="Explain this step in one or two lines…" placeholderBn="এক-দুই লাইনে ধাপটি বুঝিয়ে দিন…" />
+                        </div>
+                    </div>
+                ))}
+                {(s.steps || []).length === 0 && <p style={{ fontSize: '12px', color: '#bbb', textAlign: 'center', padding: '12px' }}>No steps yet. Click “Add Step”.</p>}
+            </div>
+        </div>
+    );
+}
+
+/* ─── EXPERIENCE TAB ─── */
+function ExperienceSectionTab({ data, setData }: { data: any; setData: any }) {
+    const s = data.experienceSection || { enabled: true, items: [] };
+    const set = (patch: any) =>
+        setData((p: any) => ({ ...p, experienceSection: { ...(p.experienceSection || {}), ...patch } }));
+    const setItems = (items: any[]) => set({ items });
+
+    const add = () => setItems([...(s.items || []), { icon: '✅', text: '', active: true, order: (s.items || []).length }]);
+    const update = (idx: number, field: string, v: any) => {
+        const items = [...s.items]; items[idx] = { ...items[idx], [field]: v }; setItems(items);
+    };
+    const remove = (idx: number) => setItems(s.items.filter((_: any, i: number) => i !== idx));
+    const move = (idx: number, dir: 'up' | 'down') => setItems(moveItem(s.items, idx, dir));
+
+    return (
+        <div>
+            <EnabledToggle enabled={s.enabled !== false} onChange={(v) => set({ enabled: v })} hint="Achievement bullets shown in the dark hero band near the bottom." />
+            <div style={card}>
+                <div style={{ display: 'grid', gap: '12px' }}>
+                    <BiInput label="Title" value={s.title} onChange={v => set({ title: v })} placeholderEn="Our Experience" placeholderBn="আমাদের এক্সপেরিয়েন্স" />
+                    <BiTextarea label="Subtitle (paragraph)" value={s.subtitle} onChange={v => set({ subtitle: v })} rows={3} placeholderEn="What we have delivered…" placeholderBn="আমরা যা অর্জন করেছি…" />
+                </div>
+            </div>
+            <div style={card}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                    <h3 style={{ fontSize: '14px', fontWeight: 700, margin: 0 }}>Achievement Bullets ({(s.items || []).length})</h3>
+                    <button onClick={add} style={btnSmall}><LuPlus size={13} /> Add Item</button>
+                </div>
+                {(s.items || []).map((it: any, idx: number) => (
+                    <div key={idx} style={{ border: '1px solid #eee', borderRadius: '8px', padding: '10px', marginBottom: '8px', background: '#fafafa' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '60px 1fr auto auto', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
+                            <input value={it.icon || ''} onChange={e => update(idx, 'icon', e.target.value)} placeholder="🏆" style={{ ...input, textAlign: 'center' }} />
+                            <span style={{ fontSize: '11px', color: '#666' }}>Bullet {idx + 1}</span>
+                            <div style={{ display: 'flex', gap: '2px' }}>
+                                <button onClick={() => move(idx, 'up')} disabled={idx === 0} style={{ ...btnSmall, padding: '6px 8px', opacity: idx === 0 ? 0.3 : 1 }}><LuArrowUp size={12} /></button>
+                                <button onClick={() => move(idx, 'down')} disabled={idx === s.items.length - 1} style={{ ...btnSmall, padding: '6px 8px', opacity: idx === s.items.length - 1 ? 0.3 : 1 }}><LuArrowDown size={12} /></button>
+                            </div>
+                            <button onClick={() => remove(idx)} style={btnDanger}><LuTrash2 size={13} /></button>
+                        </div>
+                        <BiInput label="Achievement text" value={it.text} onChange={v => update(idx, 'text', v)} placeholderEn="Achievement in English…" placeholderBn="সাফল্য বাংলায়…" />
+                    </div>
+                ))}
+                {(s.items || []).length === 0 && <p style={{ fontSize: '12px', color: '#bbb', textAlign: 'center', padding: '12px' }}>No items yet. Click “Add Item”.</p>}
+            </div>
+        </div>
+    );
+}
+
+/* ═══════════════════════════════════════════════════════════════════ */
+/* ─── REVIEWS TAB ─── */
+function ReviewsSectionTab({ data, setData }: { data: any; setData: any }) {
+    const s = data.reviewsSection || { enabled: true, items: [] };
+    const set = (patch: any) =>
+        setData((p: any) => ({ ...p, reviewsSection: { ...(p.reviewsSection || {}), ...patch } }));
+    const setItems = (items: any[]) => set({ items });
+
+    const add = () => setItems([...(s.items || []), { name: '', designation: '', avatar: '', rating: 5, text: '', active: true, order: (s.items || []).length }]);
+    const update = (idx: number, field: string, v: any) => {
+        const items = [...s.items]; items[idx] = { ...items[idx], [field]: v }; setItems(items);
+    };
+    const remove = (idx: number) => setItems(s.items.filter((_: any, i: number) => i !== idx));
+    const move = (idx: number, dir: 'up' | 'down') => setItems(moveItem(s.items, idx, dir));
+
+    return (
+        <div>
+            <EnabledToggle enabled={s.enabled !== false} onChange={(v) => set({ enabled: v })} hint="Customer / dropshipper testimonials shown as a carousel near the bottom of the homepage." />
+            <div style={card}>
+                <div style={{ display: 'grid', gap: '12px' }}>
+                    <BiInput label="Section Title" value={s.title} onChange={v => set({ title: v })} placeholderEn="Dropshipper Reviews" placeholderBn="ড্রপশিপার রিভিউস" />
+                    <BiTextarea label="Subtitle (paragraph)" value={s.subtitle} onChange={v => set({ subtitle: v })} rows={2} placeholderEn="What our sellers say about us…" placeholderBn="আমাদের সেলাররা আমাদের সম্পর্কে যা বলেন…" />
+                </div>
+            </div>
+            <div style={card}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                    <h3 style={{ fontSize: '14px', fontWeight: 700, margin: 0 }}>Reviews ({(s.items || []).length})</h3>
+                    <button onClick={add} style={btnSmall}><LuPlus size={13} /> Add Review</button>
+                </div>
+                {(s.items || []).map((it: any, idx: number) => (
+                    <div key={idx} style={{ border: '1px solid #eee', borderRadius: '8px', padding: '12px', marginBottom: '10px', background: '#fafafa' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                            <span style={{ fontSize: '11px', fontWeight: 700, color: '#666' }}>Review {idx + 1}</span>
+                            <div style={{ display: 'flex', gap: '2px' }}>
+                                <button onClick={() => move(idx, 'up')} disabled={idx === 0} style={{ ...btnSmall, padding: '6px 8px', opacity: idx === 0 ? 0.3 : 1 }}><LuArrowUp size={12} /></button>
+                                <button onClick={() => move(idx, 'down')} disabled={idx === s.items.length - 1} style={{ ...btnSmall, padding: '6px 8px', opacity: idx === s.items.length - 1 ? 0.3 : 1 }}><LuArrowDown size={12} /></button>
+                                <button onClick={() => remove(idx)} style={btnDanger}><LuTrash2 size={13} /></button>
+                            </div>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: '12px', alignItems: 'start' }}>
+                            <SingleImageUploader label="Photo (optional)" value={it.avatar || ''} onChange={(url: string) => update(idx, 'avatar', url)} />
+                            <div style={{ display: 'grid', gap: '8px' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                                    <div>
+                                        <label style={label}>Name</label>
+                                        <input value={it.name || ''} onChange={e => update(idx, 'name', e.target.value)} placeholder="Sobuj Akon" style={input} />
+                                    </div>
+                                    <div>
+                                        <label style={label}>Role (optional)</label>
+                                        <input value={it.designation || ''} onChange={e => update(idx, 'designation', e.target.value)} placeholder="রিসেলার" style={input} />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label style={label}>Rating</label>
+                                    <select value={it.rating ?? 5} onChange={e => update(idx, 'rating', Number(e.target.value))} style={input}>
+                                        {[5, 4, 3, 2, 1].map(n => <option key={n} value={n}>{'★'.repeat(n)}{'☆'.repeat(5 - n)} ({n})</option>)}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div style={{ marginTop: '8px' }}>
+                            <label style={label}>Review text</label>
+                            <textarea
+                                value={it.text || ''}
+                                onChange={e => update(idx, 'text', e.target.value)}
+                                rows={3}
+                                placeholder="What the customer said…"
+                                style={{ ...input, resize: 'vertical' as const, fontFamily: 'inherit', lineHeight: 1.55 }}
+                            />
+                        </div>
+                    </div>
+                ))}
+                {(s.items || []).length === 0 && <p style={{ fontSize: '12px', color: '#bbb', textAlign: 'center', padding: '12px' }}>No reviews yet. Click “Add Review”.</p>}
+            </div>
         </div>
     );
 }
@@ -156,9 +742,9 @@ function ContactTab({ data, setData }: { data: any; setData: any }) {
         updateField('subjects', subs);
     };
 
-    const addSocial = () => updateField('socials', [...(c.socials || []), { label: '', url: '', color: '#000000' }]);
+    const addSocial = () => updateField('socials', [...(c.socials || []), { label: '', url: '', color: '#000000', active: true }]);
     const removeSocial = (idx: number) => updateField('socials', c.socials.filter((_: any, i: number) => i !== idx));
-    const updateSocial = (idx: number, field: string, value: string) => {
+    const updateSocial = (idx: number, field: string, value: string | boolean) => {
         const s = [...c.socials]; s[idx] = { ...s[idx], [field]: value };
         updateField('socials', s);
     };
@@ -232,18 +818,40 @@ function ContactTab({ data, setData }: { data: any; setData: any }) {
 
             {/* Social Links */}
             <div style={card}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                     <h3 style={{ fontSize: '14px', fontWeight: 700, margin: 0 }}>Social Links</h3>
                     <button onClick={addSocial} style={btnSmall}><LuPlus size={13} /> Add</button>
                 </div>
-                {(c.socials || []).map((s: any, idx: number) => (
+                <p style={{ fontSize: '11px', color: '#888', margin: '0 0 12px' }}>
+                    Only links marked <strong>Active</strong> appear in the footer (under the logo) — a link stays visible when it&apos;s active even if the URL is still blank. Toggle a link off to hide it.
+                </p>
+                {(c.socials || []).map((s: any, idx: number) => {
+                    const isOn = s.active !== false;
+                    return (
                     <div key={idx} style={{ display: 'flex', gap: '8px', marginBottom: '6px', alignItems: 'center' }}>
-                        <input value={s.label} onChange={e => updateSocial(idx, 'label', e.target.value)} placeholder="Label" style={{ ...input, width: '120px' }} />
-                        <input value={s.url} onChange={e => updateSocial(idx, 'url', e.target.value)} placeholder="URL" style={{ ...input, flex: 1 }} />
+                        {/* Active toggle — the single source of truth for footer visibility. */}
+                        <button
+                            onClick={() => updateSocial(idx, 'active', !isOn)}
+                            title={isOn ? 'Active — showing in footer' : 'Hidden'}
+                            style={{
+                                ...btn,
+                                padding: '6px 10px',
+                                background: isOn ? 'var(--color-primary-lightest)' : '#f3f4f6',
+                                color: isOn ? '#16a34a' : '#9ca3af',
+                                border: `1px solid ${isOn ? '#bbf7d0' : '#e5e7eb'}`,
+                                minWidth: '82px',
+                                justifyContent: 'center',
+                            }}
+                        >
+                            {isOn ? '● Active' : '○ Hidden'}
+                        </button>
+                        <input value={s.label} onChange={e => updateSocial(idx, 'label', e.target.value)} placeholder="Label (e.g. Facebook)" style={{ ...input, width: '140px' }} />
+                        <input value={s.url} onChange={e => updateSocial(idx, 'url', e.target.value)} placeholder="URL (optional)" style={{ ...input, flex: 1 }} />
                         <input type="color" value={s.color} onChange={e => updateSocial(idx, 'color', e.target.value)} style={{ width: '36px', height: '32px', border: '1px solid #e5e7eb', borderRadius: '6px', cursor: 'pointer', padding: '2px' }} />
                         <button onClick={() => removeSocial(idx)} style={btnDanger}><LuTrash2 size={13} /></button>
                     </div>
-                ))}
+                    );
+                })}
                 {(c.socials || []).length === 0 && <p style={{ fontSize: '12px', color: '#bbb', textAlign: 'center', padding: '12px' }}>No socials added yet.</p>}
             </div>
         </div>

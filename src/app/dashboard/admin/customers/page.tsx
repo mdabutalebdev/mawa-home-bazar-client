@@ -82,7 +82,7 @@ export default function CustomersPage() {
     const { data: statsData, isLoading: isStatsLoading, refetch: refetchStats } = useGetAdminUserStatsQuery(undefined);
     // Role changes must go through the role module (PATCH /roles/:userId); the generic
     // admin update (PATCH /users/admin/:id) intentionally ignores `role`. This endpoint
-    // is superadmin-gated, so a non-superadmin gets a clear 403 instead of a silent no-op.
+    // is admin-gated, so a non-admin gets a clear 403 instead of a silent no-op.
     const [updateUserRole, { isLoading: isUpdatingRole }] = useUpdateUserRoleMutation();
     const [registerUser, { isLoading: isCreating }] = useRegisterMutation();
 
@@ -113,7 +113,7 @@ export default function CustomersPage() {
             const res = await registerUser({ ...createForm }).unwrap();
             const newUserId = res?.data?.user?._id;
 
-            // Step 2: Promote to admin via the role module (superadmin-gated)
+            // Step 2: Promote to admin via the role module (admin-gated)
             if (newUserId) {
                 await updateUserRole({ userId: newUserId, role: 'admin', permissions: [] }).unwrap();
             }

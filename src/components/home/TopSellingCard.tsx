@@ -81,16 +81,16 @@ const TopSellingCard: React.FC<TopSellingCardProps> = ({ product }) => {
     };
 
     return (
-        <div className="relative bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-lg hover:border-[var(--color-primary)]/40 transition-all duration-300 overflow-hidden group">
-            {/* Best Selling ribbon */}
+        <div className="relative h-full bg-white border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.05)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.08)] transition-shadow duration-300 overflow-hidden group">
+            {/* Best Selling — floating rounded pill in the top-right corner. */}
             <span
-                className="absolute top-0 right-0 z-10 flex items-center gap-1 text-white text-[10px] sm:text-[11px] font-bold px-2 py-1 rounded-bl-lg"
-                style={{ background: 'var(--color-sale)' }}
+                className="absolute top-2.5 right-2.5 z-10 flex items-center gap-1 text-white text-[10px] sm:text-[11px] font-bold px-2.5 py-1 rounded-full shadow-sm"
+                style={{ background: 'var(--color-primary)' }}
             >
                 <LuFlame size={12} /> Best Selling
             </span>
 
-            <div className="flex items-stretch min-h-[150px] sm:min-h-[200px] lg:min-h-[230px]">
+            <div className="flex items-stretch h-full min-h-[150px] sm:min-h-[200px] lg:min-h-[230px]">
                 {/* Image — full-bleed, fills the whole height of the card */}
                 <Link
                     href={href}
@@ -115,7 +115,7 @@ const TopSellingCard: React.FC<TopSellingCardProps> = ({ product }) => {
                     </Link>
 
                     <div className="flex items-baseline flex-wrap gap-x-2 gap-y-0.5">
-                        <span className="text-base sm:text-xl font-extrabold" style={{ color: 'var(--color-sale)' }}>
+                        <span className="text-base sm:text-xl font-extrabold" style={{ color: 'var(--color-primary)' }}>
                             ৳{currentPrice.toLocaleString()}
                         </span>
                         {saved > 0 && (

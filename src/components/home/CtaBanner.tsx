@@ -3,39 +3,52 @@
 import React from 'react';
 import Link from 'next/link';
 import { LuArrowRight } from 'react-icons/lu';
+import { useLanguage } from '@/lib/i18n/LanguageProvider';
 
+/**
+ * Bottom-of-page call-to-action band — light cream card sitting on the cream
+ * page, with a small navy button. Kept quiet on purpose: the site's colour
+ * anchors are already the header, hero and stats bar, so this section is a
+ * gentle closer rather than another loud block.
+ */
 const CtaBanner: React.FC = () => {
+    const { lang } = useLanguage();
+    const isBn = lang === 'bn';
+
     return (
-        <section className="w-full relative overflow-hidden">
-            {/* Background — indigo gradient */}
-            <div
-                className="absolute inset-0"
-                style={{ background: 'linear-gradient(120deg, var(--color-primary) 0%, var(--color-primary-dark) 55%, var(--color-primary) 100%)' }}
-            />
-            {/* Decorative blobs */}
-            <div className="absolute -top-24 -right-16 w-80 h-80 rounded-full bg-white/[0.06]" />
-            <div className="absolute -bottom-24 -left-16 w-72 h-72 rounded-full bg-white/[0.05]" />
+        <section className="w-full">
+            {/* No bottom padding — the card sits flush against the navy footer
+                that follows, so there's no cream dead-band between them. */}
+            <div className="container mx-auto px-4 sm:px-6 pt-8 sm:pt-12 pb-8 sm:pb-12">
+                <div
+                    className="relative overflow-hidden rounded-2xl border border-gray-200 p-8 sm:p-12 text-center"
+                    style={{
+                        background: 'linear-gradient(135deg, #FFFDF5 0%, #FFF3C4 100%)',
+                    }}
+                >
+                    <span
+                        className="inline-flex items-center gap-2 mb-3 px-3 py-1 rounded-full bg-white text-[11px] font-bold tracking-[0.18em] uppercase"
+                        style={{ color: 'var(--color-primary)' }}
+                    >
+                        <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--color-primary)' }} />
+                        {isBn ? 'মার্কেটপ্লেসে যোগ দিন' : 'Join the marketplace'}
+                    </span>
 
-            {/* Content */}
-            <div className="relative container mx-auto px-4 py-16 text-center">
-                <span className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-white/10 text-[11px] font-semibold tracking-[0.18em] uppercase text-white/80">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E]" /> Join the marketplace
-                </span>
+                    <h2 className="text-2xl md:text-4xl font-extrabold text-gray-900 mb-3 tracking-tight">
+                        {isBn ? 'শুরু করতে প্রস্তুত?' : 'Are you prepared to begin?'}
+                    </h2>
+                    <p className="text-sm md:text-base text-gray-700 mb-8 max-w-xl mx-auto leading-relaxed">
+                        {isBn
+                            ? 'হাজারো মানসম্মত প্রোডাক্ট নিয়ে আজই সারা বাংলাদেশে কাস্টমারের কাছে পৌঁছে দিন।'
+                            : 'Explore thousands of quality products and get them delivered to customers across Bangladesh today!'}
+                    </p>
 
-                <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-3 tracking-tight">
-                    Are you prepared to begin?
-                </h2>
-                <p className="text-sm md:text-base text-white/75 mb-8 max-w-xl mx-auto leading-relaxed">
-                    Explore thousands of quality products and get them delivered to customers across Bangladesh today!
-                </p>
-
-                {/* Buttons */}
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                     <Link
                         href="/products"
-                        className="inline-flex items-center justify-center gap-2 bg-white text-[var(--color-primary)] font-bold text-sm px-7 py-3 rounded-md hover:bg-slate-100 hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 w-full sm:w-auto"
+                        className="inline-flex items-center justify-center gap-2 text-white font-bold text-sm px-7 py-3 rounded-md shadow-sm"
+                        style={{ background: 'var(--color-primary)' }}
                     >
-                        Shop Now <LuArrowRight size={16} />
+                        {isBn ? 'শপ নাউ' : 'Shop Now'} <LuArrowRight size={16} />
                     </Link>
                 </div>
             </div>

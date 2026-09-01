@@ -3,16 +3,16 @@
 /**
  * The owner's partner inbox.
  *
- * Every partner type (dealer / company / retailer / marketing officer) shares
- * the same apply → approve lifecycle on the server, so one page with four tabs
- * beats four near-identical screens. Each tab normalises its own document shape
+ * Every partner type (dealer / company / retailer) shares the same
+ * apply → approve lifecycle on the server, so one page with three tabs
+ * beats three near-identical screens. Each tab normalises its own document shape
  * into a common `Row` and hands it to the same renderer.
  */
 
 import React, { useMemo, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import {
-    LuShieldCheck, LuRefreshCw, LuHandshake, LuBuilding2, LuStore, LuBriefcase,
+    LuShieldCheck, LuRefreshCw, LuHandshake, LuBuilding2, LuStore, LuPlus,
     LuCheck, LuX, LuBan, LuMapPin, LuPhone, LuMail, LuPercent, LuIdCard,
     LuTriangleAlert, LuInbox, LuLoaderCircle, LuChevronLeft, LuChevronRight,
     LuCalendar, LuUserCheck, LuFileText,
@@ -38,16 +38,11 @@ import {
     useRejectRetailerMutation,
     useSuspendRetailerMutation,
 } from '@/redux/api/retailerApi';
-import {
-    useGetMarketingOfficersQuery,
-    useApproveMarketingOfficerMutation,
-    useRejectMarketingOfficerMutation,
-    useSuspendMarketingOfficerMutation,
-} from '@/redux/api/marketingApi';
+import CreatePartnerModal from '@/components/admin/CreatePartnerModal';
 
 const LIMIT = 10;
 
-type Kind = 'dealers' | 'companies' | 'retailers' | 'officers';
+type Kind = 'dealers' | 'companies' | 'retailers';
 type Status = 'pending' | 'approved' | 'suspended' | 'rejected';
 
 const STATUSES: { id: Status; label: string }[] = [
@@ -68,7 +63,6 @@ const TABS: { id: Kind; label: string; short: string; icon: React.ElementType; h
     { id: 'dealers', label: 'Dealers', short: 'Dealers', icon: LuHandshake, hasCommission: true },
     { id: 'companies', label: 'Companies', short: 'Companies', icon: LuBuilding2, hasCommission: true },
     { id: 'retailers', label: 'Retailers', short: 'Retailers', icon: LuStore, hasCommission: false },
-    { id: 'officers', label: 'Marketing Officers', short: 'Officers', icon: LuBriefcase, hasCommission: false },
 ];
 
 const SHOP_TYPE: Record<string, string> = {
@@ -169,37 +163,18 @@ const normalise = (kind: Kind, d: any): Row => {
         };
     }
 
-    if (kind === 'retailers') {
-        return {
-            ...base,
-            title: d?.shopName || 'Unnamed shop',
-            subtitle: [SHOP_TYPE[d?.shopType] || 'Shop', d?.ownerName].filter(Boolean).join(' · '),
-            phone: d?.phone || d?.user?.phone || '',
-            upazila: geoName(d?.upazila),
-            district: geoName(d?.district),
-            docs: [
-                { label: 'NID', number: d?.nid, image: d?.nidImage },
-                { label: 'Trade licence', number: d?.tradeLicense, image: d?.tradeLicenseImage },
-                { label: 'Shop photo', image: d?.shopImage },
-            ],
-            commissionRate: null,
-        };
-    }
-
-    // Marketing officers work a beat of several upazilas rather than one area.
-    const beat: string[] = Array.isArray(d?.assignedUpazilas)
-        ? d.assignedUpazilas.map(geoName).filter(Boolean)
-        : [];
+    // Retailers — the only remaining partner type besides dealers and companies.
     return {
         ...base,
-        title: fullName(d?.user) || d?.employeeId || 'Field officer',
-        subtitle: d?.employeeId ? `Employee ${d.employeeId}` : 'Marketing officer',
+        title: d?.shopName || 'Unnamed shop',
+        subtitle: [SHOP_TYPE[d?.shopType] || 'Shop', d?.ownerName].filter(Boolean).join(' · '),
         phone: d?.phone || d?.user?.phone || '',
-        upazila: beat.join(', '),
-        district: '',
+        upazila: geoName(d?.upazila),
+        district: geoName(d?.district),
         docs: [
             { label: 'NID', number: d?.nid, image: d?.nidImage },
-            { label: 'Photo', image: d?.photo },
+            { label: 'Trade licence', number: d?.tradeLicense, image: d?.tradeLicenseImage },
+            { label: 'Shop photo', image: d?.shopImage },
         ],
         commissionRate: null,
     };
@@ -214,7 +189,7 @@ const RoleGate = () => (
         </div>
         <h1 className="text-lg font-bold text-gray-900">Owner access only</h1>
         <p className="text-sm text-gray-500 mt-2">
-            Approving dealers, companies, retailers and field officers is the marketplace owner&apos;s job.
+            Approving dealers, companies and retailers is the marketplace owner&apos;s job.
             Sign in with an admin account to open this inbox.
         </p>
     </div>
@@ -306,7 +281,7 @@ const HolderCell = ({ row }: { row: Row }) => (
 export default function AdminPartnersPage() {
     const { user, isAuthenticated } = useAppSelector((s) => s.auth);
     const role = (user?.role || '') as string;
-    const isAdmin = isAuthenticated && (role === 'admin' || role === 'superadmin');
+    const isAdmin = isAuthenticated && role === 'admin';
 
     const [tab, setTab] = useState<Kind>('dealers');
     const [status, setStatus] = useState<Status>('pending');
@@ -316,19 +291,19 @@ export default function AdminPartnersPage() {
     const [busy, setBusy] = useState<string | null>(null);
     const [rejecting, setRejecting] = useState<Row | null>(null);
     const [reason, setReason] = useState('');
+    /** Which partner type the "create directly" modal is open for, if any. */
+    const [creating, setCreating] = useState<'dealers' | 'companies' | null>(null);
 
     const listArgs = { status, page, limit: LIMIT };
     const dealers = useGetDealersQuery(listArgs, { skip: !isAdmin || tab !== 'dealers' });
     const companies = useGetCompaniesQuery(listArgs, { skip: !isAdmin || tab !== 'companies' });
     const retailers = useGetRetailersQuery(listArgs, { skip: !isAdmin || tab !== 'retailers' });
-    const officers = useGetMarketingOfficersQuery(listArgs, { skip: !isAdmin || tab !== 'officers' });
 
     // The tab badges. `limit: 1` because only `meta.total` is read.
     const countArgs = { status: 'pending', limit: 1 };
     const dealerCount = useGetDealersQuery(countArgs, { skip: !isAdmin });
     const companyCount = useGetCompaniesQuery(countArgs, { skip: !isAdmin });
     const retailerCount = useGetRetailersQuery(countArgs, { skip: !isAdmin });
-    const officerCount = useGetMarketingOfficersQuery(countArgs, { skip: !isAdmin });
 
     const [approveDealer] = useApproveDealerMutation();
     const [rejectDealer] = useRejectDealerMutation();
@@ -344,13 +319,9 @@ export default function AdminPartnersPage() {
     const [rejectRetailer] = useRejectRetailerMutation();
     const [suspendRetailer] = useSuspendRetailerMutation();
 
-    const [approveOfficer] = useApproveMarketingOfficerMutation();
-    const [rejectOfficer] = useRejectMarketingOfficerMutation();
-    const [suspendOfficer] = useSuspendMarketingOfficerMutation();
-
-    // The four hooks share a shape but not a type; one `any` here beats casting
+    // The three hooks share a shape but not a type; one `any` here beats casting
     // every field read below.
-    const active: any = tab === 'dealers' ? dealers : tab === 'companies' ? companies : tab === 'retailers' ? retailers : officers;
+    const active: any = tab === 'dealers' ? dealers : tab === 'companies' ? companies : retailers;
     const raw: any[] = Array.isArray(active.data?.data) ? active.data.data : [];
     const meta = active.data?.meta || { total: 0, totalPages: 1 };
     const totalPages = Math.max(Number(meta.totalPages) || 1, 1);
@@ -362,7 +333,6 @@ export default function AdminPartnersPage() {
         dealers: Number((dealerCount.data as any)?.meta?.total ?? 0),
         companies: Number((companyCount.data as any)?.meta?.total ?? 0),
         retailers: Number((retailerCount.data as any)?.meta?.total ?? 0),
-        officers: Number((officerCount.data as any)?.meta?.total ?? 0),
     };
 
     const tabConfig = TABS.find((t) => t.id === tab)!;
@@ -397,10 +367,8 @@ export default function AdminPartnersPage() {
                 await approveDealer(rate === undefined ? row.id : { id: row.id, commissionRate: rate }).unwrap();
             } else if (tab === 'companies') {
                 await approveCompany(row.id).unwrap();
-            } else if (tab === 'retailers') {
-                await approveRetailer(row.id).unwrap();
             } else {
-                await approveOfficer(row.id).unwrap();
+                await approveRetailer(row.id).unwrap();
             }
             setCommission((prev) => {
                 const next = { ...prev };
@@ -432,8 +400,7 @@ export default function AdminPartnersPage() {
         try {
             if (tab === 'dealers') await suspendDealer(row.id).unwrap();
             else if (tab === 'companies') await suspendCompany(row.id).unwrap();
-            else if (tab === 'retailers') await suspendRetailer(row.id).unwrap();
-            else await suspendOfficer(row.id).unwrap();
+            else await suspendRetailer(row.id).unwrap();
             toast.success(`${row.title} suspended`);
         } catch (err: any) {
             fail(err, 'Could not suspend this partner');
@@ -456,8 +423,7 @@ export default function AdminPartnersPage() {
             const payload = { id: row.id, rejectionReason: text };
             if (tab === 'dealers') await rejectDealer(payload).unwrap();
             else if (tab === 'companies') await rejectCompany(payload).unwrap();
-            else if (tab === 'retailers') await rejectRetailer(payload).unwrap();
-            else await rejectOfficer(payload).unwrap();
+            else await rejectRetailer(payload).unwrap();
             toast.success(`${row.title} rejected`);
             setRejecting(null);
             setReason('');
@@ -604,18 +570,29 @@ export default function AdminPartnersPage() {
                         Vet the documents, set the commission, then let them trade.
                     </p>
                 </div>
-                <button
-                    onClick={() => active.refetch()}
-                    className="self-start sm:self-auto min-h-[44px] px-4 bg-white border border-gray-200 rounded-xl text-sm font-semibold hover:bg-gray-50 flex items-center gap-2 transition-all"
-                >
-                    <LuRefreshCw size={15} className={active.isFetching ? 'animate-spin' : ''} />
-                    Refresh
-                </button>
+                <div className="flex items-center gap-2 self-start sm:self-auto">
+                    {(tab === 'dealers' || tab === 'companies') && (
+                        <button
+                            onClick={() => setCreating(tab)}
+                            className="min-h-[44px] px-4 bg-[var(--color-primary)] text-white rounded-xl text-sm font-bold hover:bg-[var(--color-primary-dark)] flex items-center gap-2 transition-all"
+                        >
+                            <LuPlus size={16} />
+                            Add {tab === 'dealers' ? 'Dealer' : 'Company'}
+                        </button>
+                    )}
+                    <button
+                        onClick={() => active.refetch()}
+                        className="min-h-[44px] px-4 bg-white border border-gray-200 rounded-xl text-sm font-semibold hover:bg-gray-50 flex items-center gap-2 transition-all"
+                    >
+                        <LuRefreshCw size={15} className={active.isFetching ? 'animate-spin' : ''} />
+                        Refresh
+                    </button>
+                </div>
             </div>
 
             {/* Tabs */}
             <div className="bg-white rounded-2xl border border-gray-100 p-3 shadow-sm">
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+                <div className="grid grid-cols-3 gap-2">
                     {TABS.map((t) => {
                         const count = pendingCounts[t.id];
                         const on = tab === t.id;
@@ -908,6 +885,15 @@ export default function AdminPartnersPage() {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Create-directly modal (dealers / companies) */}
+            {creating && (
+                <CreatePartnerModal
+                    kind={creating}
+                    onClose={() => setCreating(null)}
+                    onCreated={() => { setStatus('approved'); setPage(1); active.refetch(); }}
+                />
             )}
         </div>
     );

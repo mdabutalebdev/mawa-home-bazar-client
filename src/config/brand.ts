@@ -19,11 +19,24 @@
 
 /* ─────────────── COLOUR ─────────────── */
 
-/** ⬇⬇⬇  THE ONE COLOUR VARIABLE  ⬇⬇⬇ */
-export const BRAND_PRIMARY = '#3A6451';
-
-/** Accent used alongside the primary (defaults to the primary itself). */
-export const BRAND_SECONDARY = BRAND_PRIMARY;
+/* Three-colour brand — matched to the Safwan · Mawa Homebazar logo:
+ *   • মেরুন / Maroon → the primary; deep colour that carries the header,
+ *     buttons, links and every filled surface.
+ *   • নীল / Navy  → the secondary; used for accents (badges, section rules)
+ *     that need to sit next to the maroon without stealing focus.
+ *   • হলুদ / Yellow → the sale colour; used for price tags, deal badges and
+ *     the highlight tiles under the hero. */
+// Deep maroon — matches the exact maroon inside the Safwan logo artwork so
+// the logo blends seamlessly against the header. Carries every filled brand
+// surface: header, buttons, links, focus rings. The dark-navy footer at the
+// bottom is set locally in the footer file; the site's canonical primary
+// stays maroon everywhere else.
+export const BRAND_PRIMARY   = '#5C1013'; // deep maroon (logo bg)
+export const BRAND_SECONDARY = '#0F2E5C'; // deep navy (used by the footer)
+/** Yellow — see brandCssVariables() below where it lands on --color-sale
+ *  and --color-deal-gold. Kept as a named export so calling code can read
+ *  it directly (e.g. the header sale ribbon). */
+export const BRAND_ACCENT_YELLOW = '#FBBF00';
 
 /* ─────────────── TYPOGRAPHY ─────────────── */
 
@@ -142,7 +155,8 @@ export function brandCssVariables(): string {
 --color-primary-surface:${brand.primarySurface};
 --color-primary-glow:${brand.primaryGlow};
 --color-secondary:${brand.secondary};
---color-sale:${brand.primary};
+--color-sale:${BRAND_ACCENT_YELLOW};
+--color-deal-gold:${BRAND_ACCENT_YELLOW};
 --font-family:${fonts.body};
 --font-heading:${fonts.heading};
 --font-bangla:${fonts.bangla};

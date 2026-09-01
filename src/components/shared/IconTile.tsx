@@ -15,7 +15,7 @@ export type IconTone =
     | 'primary' | 'blue' | 'purple' | 'amber' | 'pink'
     | 'teal' | 'cyan' | 'rose' | 'green' | 'gray';
 
-const TONES: Record<IconTone, { bg: string; fg: string }> = {
+export const TONES: Record<IconTone, { bg: string; fg: string }> = {
     primary: { bg: 'var(--color-primary-lightest)', fg: 'var(--color-primary)' },
     blue: { bg: '#EFF6FF', fg: '#2563EB' },
     purple: { bg: '#F5F3FF', fg: '#7C3AED' },
@@ -33,6 +33,55 @@ const CYCLE: IconTone[] = ['primary', 'blue', 'teal', 'pink', 'amber', 'purple',
 
 export const toneByIndex = (i: number): IconTone =>
     CYCLE[((i % CYCLE.length) + CYCLE.length) % CYCLE.length];
+
+/* ── TileShell ──────────────────────────────────────────────────────────
+   The bare tinted rounded tile, without assuming what sits inside it. Use it
+   directly when the contents are not a react-icons glyph (an uploaded image,
+   a resolved icon, a fallback). IconTile below is the common case wrapper. */
+interface TileShellProps {
+    tone?: IconTone;
+    /** Outer tile size in px (default 44). */
+    size?: number;
+    /** Corner radius in px (defaults to ~28% of tile for a soft square; pass a
+     *  large value like 999 for a perfect circle). */
+    radius?: number;
+    className?: string;
+    style?: React.CSSProperties;
+    title?: string;
+    children: React.ReactNode;
+}
+
+export const TileShell: React.FC<TileShellProps> = ({
+    tone = 'primary',
+    size = 44,
+    radius,
+    className = '',
+    style,
+    title,
+    children,
+}) => {
+    const t = TONES[tone] || TONES.primary;
+    return (
+        <span
+            className={className}
+            title={title}
+            style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: size,
+                height: size,
+                borderRadius: radius ?? Math.round(size * 0.28),
+                background: t.bg,
+                color: t.fg,
+                flexShrink: 0,
+                ...style,
+            }}
+        >
+            {children}
+        </span>
+    );
+};
 
 interface IconTileProps {
     icon: IconType;
@@ -57,28 +106,10 @@ const IconTile: React.FC<IconTileProps> = ({
     className = '',
     style,
     title,
-}) => {
-    const t = TONES[tone] || TONES.primary;
-    return (
-        <span
-            className={className}
-            title={title}
-            style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: size,
-                height: size,
-                borderRadius: radius ?? Math.round(size * 0.28),
-                background: t.bg,
-                color: t.fg,
-                flexShrink: 0,
-                ...style,
-            }}
-        >
-            <Icon size={iconSize ?? Math.round(size * 0.46)} />
-        </span>
-    );
-};
+}) => (
+    <TileShell tone={tone} size={size} radius={radius} className={className} style={style} title={title}>
+        <Icon size={iconSize ?? Math.round(size * 0.46)} />
+    </TileShell>
+);
 
 export default IconTile;

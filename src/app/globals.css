@@ -32,8 +32,10 @@ h1, h2, h3, h1 *, h2 *, h3 *,
 :root {
   /* Colors */
   --color-accent: #EF4444;
-  --color-background: #F8FAFC;
-  --color-surface: #F8FAFC;
+  /* Site-wide page background — a soft warm off-white. Cards sit on this as
+     pure white (#FFFFFF), giving a gentle, professional contrast everywhere. */
+  --color-background: #FBF9F5;
+  --color-surface: #FFFFFF;
   --color-text-primary: #1E293B;
   --color-text-secondary: #4B5966;
   --color-text-muted: #94A3B8;
@@ -44,7 +46,7 @@ h1, h2, h3, h1 *, h2 *, h3 *,
   /* Storefront tokens (--color-sale comes from brand.ts with the palette) */
   --color-deal-gold: #FBBF00;   /* CHOICE / deal badges */
   --color-trust-dark: #3A3D46;  /* trust strip bar */
-  --color-page: #F2F3F5;        /* app gray background behind cards */
+  --color-page: #FBF9F5;        /* app warm off-white behind cards */
 
   /* Typography — --font-family / --font-heading / --font-bangla come from
      brand.ts with the palette (see the note at the top of this file). */

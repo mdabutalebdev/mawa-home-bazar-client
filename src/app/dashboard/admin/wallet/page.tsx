@@ -260,7 +260,7 @@ const Modal = ({ title, onClose, children }: { title: string; onClose: () => voi
 export default function AdminWalletPage() {
     const { user, isAuthenticated } = useAppSelector((s) => s.auth);
     const role = (user?.role || '') as string;
-    const isOwner = isAuthenticated && (role === 'admin' || role === 'superadmin');
+    const isOwner = isAuthenticated && role === 'admin';
 
     const [status, setStatus] = useState('pending');
     const [type, setType] = useState('all');

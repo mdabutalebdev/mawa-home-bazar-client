@@ -1,8 +1,9 @@
 "use client";
 
 import React from 'react';
+import Link from 'next/link';
+import { LuChevronRight } from 'react-icons/lu';
 import { useGetProductsQuery } from '@/redux/api/productApi';
-import SectionHeader from './SectionHeader';
 import TopSellingCard from './TopSellingCard';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -46,15 +47,26 @@ const BestSellers: React.FC = () => {
     if (products.length === 0) return null;
 
     return (
-        <div className="container mx-auto px-2 sm:px-4 my-2 sm:my-3">
-            <div className="bg-white rounded-lg p-3 sm:p-4 shadow-sm">
-                <SectionHeader title="Top Selling Products" seeMoreHref="/products?sort=-totalSold" />
+        <div className="container mx-auto px-4 sm:px-6 my-6 sm:my-10">
+            {/* Centred heading — clean, no outer bordered box; the white cards
+                sit directly on the warm page background. */}
+            <div className="relative flex items-center justify-center mb-6 sm:mb-8">
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight text-center">
+                    Top Selling Products
+                </h2>
+                <Link
+                    href="/products?sort=-totalSold"
+                    className="absolute right-0 hidden sm:flex items-center text-sm font-semibold text-gray-500 hover:text-[var(--color-primary)] transition-colors"
+                >
+                    See More <LuChevronRight size={16} />
+                </Link>
+            </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
-                    {products.map((product) => (
-                        <TopSellingCard key={product._id} product={product} />
-                    ))}
-                </div>
+            {/* items-stretch keeps both cards in a row the exact same height. */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 items-stretch">
+                {products.map((product) => (
+                    <TopSellingCard key={product._id} product={product} />
+                ))}
             </div>
         </div>
     );

@@ -7,7 +7,7 @@ export const roleApi = baseApi.injectEndpoints({
             query: () => ({ url: '/roles/permissions', method: 'GET' }),
             providesTags: ['Roles'],
         }),
-        // Superadmin: staff users (admin/superadmin) — GET /api/roles/staff
+        // Admin: staff users — GET /api/roles/staff
         getStaff: builder.query({
             query: () => ({ url: '/roles/staff', method: 'GET' }),
             providesTags: ['Roles'],

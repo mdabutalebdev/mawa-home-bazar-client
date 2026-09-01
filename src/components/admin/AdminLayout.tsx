@@ -8,13 +8,11 @@ import {
     LuLayoutGrid, LuLogOut, LuMenu, LuX, LuChevronDown,
     LuShoppingCart, LuUser, LuChevronLeft,
     LuLayoutDashboard, LuChartColumn, LuTruck, LuTag, LuStar, LuMapPin,
-    LuSettings, LuBell, LuSearch, LuCreditCard, LuZap, LuShield, LuRefreshCw, LuMail,
-    LuWallet, LuHandshake,
+    LuSettings, LuBell, LuSearch, LuCreditCard, LuZap, LuRefreshCw, LuMail,
+    LuWallet, LuHandshake, LuInbox,
 } from 'react-icons/lu';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import Logo from '@/components/shared/Logo';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/redux/store';
 
 interface AdminLayoutProps { children: React.ReactNode; }
 
@@ -34,6 +32,7 @@ const menuSections = [
         label: 'Orders & Fulfillment',
         items: [
             { name: 'Orders', href: '/dashboard/admin/orders', icon: LuShoppingCart, submenu: null },
+            { name: 'Order Requests', href: '/dashboard/admin/order-requests', icon: LuInbox, submenu: null },
             { name: 'Courier / Shipments', href: '/dashboard/admin/courier', icon: LuTruck, submenu: null },
             { name: 'Shipping & Zones', href: '/dashboard/admin/shipping', icon: LuMapPin, submenu: null },
             { name: 'Returns', href: '/dashboard/admin/returns', icon: LuRefreshCw, submenu: null },
@@ -76,8 +75,7 @@ const menuSections = [
         items: [
             // Nothing trades until the owner approves it here, so it sits above the user list.
             { name: 'Partners', href: '/dashboard/admin/partners', icon: LuHandshake, submenu: null },
-            { name: 'Users & Admins', href: '/dashboard/admin/customers', icon: LuUsers, submenu: null },
-            { name: 'Roles & Permissions', href: '/dashboard/admin/roles', icon: LuShield, submenu: null, superadminOnly: true },
+            { name: 'Users', href: '/dashboard/admin/customers', icon: LuUsers, submenu: null },
         ],
     },
     // Configuration
@@ -99,7 +97,6 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     const [expandedMenu, setExpandedMenu] = useState<string | null>(null);
     const pathname = usePathname();
     const router = useRouter();
-    const role = useSelector((s: RootState) => s.auth.user?.role);
 
     useEffect(() => { setMobileOpen(false); }, [pathname]);
 
@@ -147,7 +144,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                         }}>
                             {section.label}
                         </p>
-                        {section.items.filter((item: any) => !item.superadminOnly || role === 'superadmin').map((item) => {
+                        {section.items.map((item) => {
                             const hasSubmenu = !!(item.submenu && item.submenu.length > 0);
                             const isExpanded = expandedMenu === item.name;
                             const parentActive = isParentActive(item);

@@ -20,6 +20,11 @@ export const dealerApi = baseApi.injectEndpoints({
             query: (data) => ({ url: '/dealers/apply', method: 'POST', body: data }),
             invalidatesTags: ['Dealers', 'Partners'],
         }),
+        // Admin creates a dealer + its owner login account — POST /api/dealers
+        adminCreateDealer: builder.mutation({
+            query: (data: Record<string, unknown>) => ({ url: '/dealers', method: 'POST', body: data }),
+            invalidatesTags: ['Dealers', 'Partners', 'Geo'],
+        }),
         // My dealer profile — GET /api/dealers/me
         getMyDealer: builder.query({
             query: () => '/dealers/me',
@@ -117,6 +122,7 @@ export const {
     useGetPublicDealersQuery,
     useGetDealerByUpazilaQuery,
     useApplyDealerMutation,
+    useAdminCreateDealerMutation,
     useGetMyDealerQuery,
     useUpdateMyDealerMutation,
     useGetDealerOrdersQuery,

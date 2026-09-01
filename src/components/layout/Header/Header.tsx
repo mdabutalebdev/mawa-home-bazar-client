@@ -110,7 +110,8 @@ const Header: React.FC = () => {
         router.push(`/products?${params.toString()}`);
     };
 
-    const actionCls = "flex flex-col items-center gap-0.5 px-2.5 py-2 text-white hover:text-white transition-colors rounded-md hover:bg-white/15 cursor-pointer select-none";
+    // Header sits on maroon; icons/text stay white with a hover glow.
+    const actionCls = "flex flex-col items-center gap-0.5 px-2.5 py-2 text-white transition-colors rounded-md hover:bg-white/15 cursor-pointer select-none";
 
     return (
         <>
@@ -156,6 +157,8 @@ const Header: React.FC = () => {
                 </div>
 
                 {/* ════════════════ MAIN HEADER ════════════════ */}
+                {/* Deep maroon — matches the logo artwork so the mark sits
+                    flush on the bar with no visible chip. */}
                 <div style={{ background: 'var(--color-primary)' }}>
                     <div className="container mx-auto px-4">
                         <div className="flex items-center gap-3 lg:gap-5 h-[76px]">
@@ -253,7 +256,7 @@ const Header: React.FC = () => {
                                                 <div className="py-1.5">
                                                     {[
                                                         {
-                                                            href: (user.role === 'admin' || user.role === 'superadmin') ? '/dashboard/admin' : '/dashboard/user',
+                                                            href: user.role === 'admin' ? '/dashboard/admin' : '/dashboard/user',
                                                             icon: <LuLayoutGrid size={15} />, label: t('nav.dashboard'),
                                                         },
                                                         { href: '/dashboard/user/orders', icon: <LuBox size={15} />, label: t('nav.myOrders') },
@@ -343,7 +346,7 @@ const Header: React.FC = () => {
 
                                 {/* Hamburger — mobile only, rightmost */}
                                 <button
-                                    className="lg:hidden p-2 text-white hover:text-white rounded-md hover:bg-white/15 transition-colors flex-shrink-0"
+                                    className="lg:hidden p-2 text-white rounded-md hover:bg-white/15 transition-colors flex-shrink-0"
                                     onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                                     aria-label={t('nav.menu')}
                                 >
@@ -439,11 +442,12 @@ const Header: React.FC = () => {
 };
 
 function HeaderLogo() {
+    // The logo image itself carries the maroon ground that matches
+    // `--color-primary`, so no chip / border / shadow behind it — just the
+    // artwork sitting flush on the header.
     return (
-        <div className="group select-none transition-transform duration-300 group-hover:scale-105" aria-label="Mawa Homebazar BD">
-            {/* `light` = emblem + white wordmark, so the logo sits directly on the
-                brand-green header with no white chip behind it. */}
-            <Logo light imgClassName="h-[36px] md:h-[46px]" />
+        <div className="select-none" aria-label="Safwan · Mawa Homebazar BD">
+            <Logo imgClassName="h-[48px] md:h-[60px]" />
         </div>
     );
 }

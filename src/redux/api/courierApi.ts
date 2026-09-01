@@ -29,7 +29,7 @@ export interface IBulkResult {
     results: { orderId: string; ok: boolean; trackingNumber?: string; courierStatus?: string; needsConfirmation?: boolean; error?: string }[];
 }
 
-// Steadfast (Packzy) courier — admin/superadmin book orders & sync status.
+// Steadfast (Packzy) courier — admin books orders & syncs status.
 export const courierApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
         // GET /courier/orders — flat order list (Shipments board)

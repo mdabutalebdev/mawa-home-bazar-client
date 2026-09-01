@@ -69,7 +69,10 @@ const HeroSection: React.FC = () => {
      * Facebook cover photo. The text overlay is positioned against the frame,
      * not the photo, so headlines stay put whatever the artwork's proportions.
      */
-    const STAGE_HEIGHT = 'h-[190px] sm:h-[260px] md:h-[340px] lg:h-[420px]';
+    // Taller than before — the hero is the first thing a visitor sees, so a
+    // bigger stage reads as more premium and gives the banner artwork room to
+    // breathe. Steps up by breakpoint so phones don't get an oversized crop.
+    const STAGE_HEIGHT = 'h-[240px] sm:h-[340px] md:h-[440px] lg:h-[540px]';
 
     useEffect(() => { setActive(0); }, [images.length]);
 
@@ -102,8 +105,8 @@ const HeroSection: React.FC = () => {
     if (isLoading) {
         return (
             <section className="w-full" aria-label="Featured banners">
-                <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-5">
-                    <div className={`w-full animate-pulse rounded-md bg-slate-100 ring-1 ring-black/5 ${STAGE_HEIGHT}`} />
+                <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-5">
+                    <div className={`w-full animate-pulse rounded-2xl bg-slate-100 ${STAGE_HEIGHT}`} />
                 </div>
             </section>
         );
@@ -113,9 +116,11 @@ const HeroSection: React.FC = () => {
 
     return (
         <section className="w-full" aria-label="Featured banners">
-            <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-5">
+            {/* Inside the standard container, rounded corners — sits in rhythm
+                with the cards below rather than bleeding to the viewport edge. */}
+            <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-5">
                 <div
-                    className="group relative w-full overflow-hidden rounded-md bg-slate-100 shadow-[0_14px_44px_-22px_rgba(15,23,42,0.4)] ring-1 ring-black/5"
+                    className="group relative w-full overflow-hidden rounded-2xl bg-slate-100 shadow-[0_14px_44px_-24px_rgba(15,23,42,0.35)] ring-1 ring-black/5"
                     onMouseEnter={() => setPaused(true)}
                     onMouseLeave={() => { setPaused(false); setCycle((c) => c + 1); }}
                     onTouchStart={onTouchStart}

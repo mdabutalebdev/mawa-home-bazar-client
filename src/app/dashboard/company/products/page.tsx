@@ -15,7 +15,7 @@ import {
     useUpdateMyCompanyProductMutation,
     useDeleteMyCompanyProductMutation,
 } from '@/redux/api/companyApi';
-import { useGetCategoriesQuery } from '@/redux/api/categoryApi';
+import { useGetSellerCategoriesQuery } from '@/redux/api/categoryApi';
 import { useUploadMyImagesMutation } from '@/redux/api/uploadApi';
 
 const LIMIT = 12;
@@ -133,7 +133,8 @@ export default function CompanyProductsPage() {
         },
         { skip: !isCompany }
     );
-    const { data: catRes } = useGetCategoriesQuery({ limit: 200 }, { skip: !isCompany });
+    // Global (admin) categories + this company's own — never other companies'.
+    const { data: catRes } = useGetSellerCategoriesQuery(undefined, { skip: !isCompany });
 
     const [createProduct, { isLoading: creating }] = useCreateMyCompanyProductMutation();
     const [updateProduct, { isLoading: updating }] = useUpdateMyCompanyProductMutation();

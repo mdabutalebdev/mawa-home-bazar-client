@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useRef } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import { LuChevronLeft, LuChevronRight, LuX } from 'react-icons/lu';
 import { useGetCategoriesQuery } from '@/redux/api/categoryApi';
 
 interface Category {
@@ -12,10 +11,6 @@ interface Category {
     icon?: string;
     image?: string;
     parent?: string | { _id: string } | null;
-}
-
-interface CategoryExpertiseProps {
-    onClose?: () => void;
 }
 
 const ICON_MAP: { keywords: string[]; icon: string }[] = [
@@ -55,141 +50,90 @@ function resolveIcon(name: string, dbIcon?: string): string {
     return '📦';
 }
 
-const CategoryExpertise: React.FC<CategoryExpertiseProps> = ({ onClose }) => {
-    // Only categories the admin has toggled to show on the homepage.
-    const { data: categoriesData, isLoading } = useGetCategoriesQuery({ home: true });
+/**
+ * "আমাদের প্রোডাক্ট সমূহ" — dense category grid modelled on shopbasebd.com.
+ * Every top-level category renders as a small square tile with an image or
+ * emoji and its label underneath; the whole tile is a link to that category's
+ * product listing. No horizontal scroller — everything is visible at once.
+ */
+const CategoryExpertise: React.FC = () => {
+    const { data: categoriesData, isLoading } = useGetCategoriesQuery({});
     const apiCategories: Category[] = categoriesData?.data || [];
-    // Only show top-level categories (not sub-categories) in the featured strip.
-    // There is deliberately no hardcoded stand-in list: it used to render for the
-    // moment before the real categories arrived, flashing invented categories that
-    // don't exist in the store and whose links 400.
+    // Top-level categories only — sub-categories would blow the grid out.
     const categories: Category[] = apiCategories.filter((c) => !c.parent);
 
-    const scrollRef = useRef<HTMLDivElement>(null);
-
-    const scroll = (dir: 'left' | 'right') => {
-        if (!scrollRef.current) return;
-        scrollRef.current.scrollBy({ left: dir === 'left' ? -360 : 360, behavior: 'smooth' });
-    };
-
-    // Loading: hold the strip's space with neutral tiles — never stand-in content.
     if (isLoading) {
         return (
-            <section className="w-full bg-white border-b border-gray-100">
-                <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-5">
-                    <div className="h-5 w-40 rounded bg-gray-100 animate-pulse mb-4" />
-                    <div className="flex gap-2 sm:gap-4 justify-center">
-                        {[...Array(6)].map((_, i) => (
-                            <div key={i} className="flex-shrink-0 flex flex-col items-center gap-1.5 sm:gap-2.5 w-[76px] sm:w-[130px]">
-                                <div className="w-[72px] h-[72px] sm:w-[128px] sm:h-[128px] rounded-md bg-gray-100 animate-pulse" />
-                                <div className="h-3 w-14 rounded bg-gray-100 animate-pulse" />
-                            </div>
+            <section className="w-full">
+                <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-10">
+                    <div className="h-6 w-56 rounded bg-gray-100 animate-pulse mx-auto mb-4" />
+                    <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2 sm:gap-3">
+                        {[...Array(20)].map((_, i) => (
+                            <div key={i} className="aspect-square rounded-lg bg-white ring-1 ring-gray-100 animate-pulse" />
                         ))}
                     </div>
                 </div>
             </section>
         );
     }
-    // Loaded with nothing to show — render no strip at all.
+
     if (categories.length === 0) return null;
 
     return (
-        <section id="home-categories" className="w-full scroll-mt-24 bg-white border-b border-gray-100">
-            <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-5">
+        <section id="home-categories" className="w-full scroll-mt-24">
+            {/* Outer container carries the px-4/6 gutter so the cream card's
+                left/right edges line up EXACTLY with the stats tiles and every
+                other section (which all sit inside the same padded container). */}
+            <div className="container mx-auto px-4 sm:px-6">
+              <div
+                className="px-4 sm:px-8 py-6 sm:py-10 rounded-2xl"
+                style={{
+                    // Slightly deeper cream — same warm family as the page bg
+                    // so the block reads as a raised card, not a colour break.
+                    background: '#FFF3C4',
+                }}
+              >
+                {/* Header */}
+                <header className="text-center mb-4 sm:mb-6">
+                    <h2 className="text-lg sm:text-2xl font-extrabold text-gray-900 tracking-tight">
+                        আমাদের প্রোডাক্ট সমূহ
+                    </h2>
+                    <p className="mt-1 text-[11px] sm:text-sm text-gray-700 max-w-2xl mx-auto">
+                        নিচের যেকোনো ক্যাটেগরিতে ক্লিক করে সেই ক্যাটেগরির সব প্রোডাক্ট দেখুন।
+                    </p>
+                </header>
 
-                {/* Header row */}
-                <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2.5">
-                        <span
-                            className="w-[3px] h-5 rounded-full"
-                            style={{ background: 'var(--color-primary)' }}
-                        />
-                        <h2 className="text-sm sm:text-base font-bold text-gray-800 tracking-tight">
-                            Featured Categories
-                        </h2>
-                    </div>
-                    <div className="flex items-center gap-2">
+                {/* Dense grid — 4 cols on phones, 10 on desktop. Same feel as
+                    shopbasebd.com — every top-level category is one tap away. */}
+                <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-1.5 sm:gap-2.5">
+                    {categories.map((cat) => (
                         <Link
-                            href="/products"
-                            className="text-xs font-semibold hover:underline"
-                            style={{ color: 'var(--color-primary)' }}
+                            key={cat._id}
+                            href={`/products?category=${cat._id}`}
+                            className="flex flex-col items-center rounded-lg bg-white p-1.5 sm:p-2 shadow-sm ring-1 ring-gray-100"
                         >
-                            View All →
-                        </Link>
-                        {onClose && (
-                            <button
-                                onClick={onClose}
-                                className="ml-1 w-6 h-6 flex items-center justify-center rounded-full bg-gray-100 hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
-                            >
-                                <LuX size={13} />
-                            </button>
-                        )}
-                    </div>
-                </div>
-
-                {/* Scroll area */}
-                <div className="relative px-7 sm:px-0">
-                    {/* Left arrow — visible on all sizes */}
-                    <button
-                        onClick={() => scroll('left')}
-                        aria-label="Scroll left"
-                        className="flex absolute left-0 sm:-left-3 top-1/2 -translate-y-1/2 z-10 w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-white border border-gray-200 shadow-md items-center justify-center text-gray-400 hover:text-[var(--color-primary)] hover:border-[var(--color-primary)] transition-all"
-                    >
-                        <LuChevronLeft size={13} className="sm:hidden" />
-                        <LuChevronLeft size={16} className="hidden sm:block" />
-                    </button>
-
-                    <div
-                        ref={scrollRef}
-                        className="scrollbar-hide overflow-x-auto"
-                    >
-                        <div className="flex gap-2 sm:gap-4 justify-center min-w-full py-2">
-                            {categories.map(cat => (
-                                <Link
-                                    key={cat._id}
-                                    href={`/products?category=${cat._id}`}
-                                    className="flex-shrink-0 flex flex-col items-center gap-1.5 sm:gap-2.5 group w-[76px] sm:w-[130px]"
-                                >
-                                    {/* Tile — a real category photo when the admin has set one,
-                                        otherwise fall back to the emoji so nothing looks empty. */}
-                                    <div
-                                        className="w-[72px] h-[72px] sm:w-[128px] sm:h-[128px] rounded-md bg-white border border-gray-200 overflow-hidden flex items-center justify-center transition-all duration-200 group-hover:border-[var(--color-primary-border)] group-hover:shadow-md"
-                                    >
-                                        {cat.image ? (
-                                            // eslint-disable-next-line @next/next/no-img-element
-                                            <img
-                                                src={cat.image}
-                                                alt={cat.name}
-                                                // This strip sits high on the homepage — only six small tiles, so
-                                                // load them straight away rather than lazily popping them in.
-                                                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                                            />
-                                        ) : (
-                                            <span className="text-3xl sm:text-6xl select-none transition-transform duration-200 group-hover:scale-110">
-                                                {resolveIcon(cat.name, cat.icon)}
-                                            </span>
-                                        )}
-                                    </div>
-
-                                    {/* Label */}
-                                    <span className="w-full text-[10px] sm:text-[13px] sm:font-semibold text-gray-600 text-center font-medium leading-snug transition-colors group-hover:text-[var(--color-primary)]">
-                                        {cat.name}
+                            <div className="w-full aspect-square rounded-md bg-white overflow-hidden flex items-center justify-center">
+                                {cat.image ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img
+                                        src={cat.image}
+                                        alt={cat.name}
+                                        loading="lazy"
+                                        className="w-full h-full object-contain p-1"
+                                    />
+                                ) : (
+                                    <span className="text-2xl sm:text-3xl select-none">
+                                        {resolveIcon(cat.name, cat.icon)}
                                     </span>
-                                </Link>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Right arrow — visible on all sizes */}
-                    <button
-                        onClick={() => scroll('right')}
-                        aria-label="Scroll right"
-                        className="flex absolute right-0 sm:-right-3 top-1/2 -translate-y-1/2 z-10 w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-white border border-gray-200 shadow-md items-center justify-center text-gray-400 hover:text-[var(--color-primary)] hover:border-[var(--color-primary)] transition-all"
-                    >
-                        <LuChevronRight size={13} className="sm:hidden" />
-                        <LuChevronRight size={16} className="hidden sm:block" />
-                    </button>
+                                )}
+                            </div>
+                            <span className="mt-1 w-full text-[10px] sm:text-[11px] font-semibold text-gray-800 text-center leading-tight line-clamp-2">
+                                {cat.name}
+                            </span>
+                        </Link>
+                    ))}
                 </div>
+              </div>
             </div>
         </section>
     );

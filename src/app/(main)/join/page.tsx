@@ -7,7 +7,6 @@ import {
     LuBuilding2,
     LuHandshake,
     LuStore,
-    LuMegaphone,
     LuArrowRight,
     LuCheck,
     LuChevronRight,
@@ -57,14 +56,6 @@ const TRACKS: Track[] = [
         pitchKey: 'join.retailer.pitch',
         benefitKeys: ['join.retailer.b1', 'join.retailer.b2', 'join.retailer.b3'],
         ctaKey: 'join.retailer.cta',
-    },
-    {
-        slug: 'marketing-officer',
-        icon: <LuMegaphone size={24} />,
-        titleKey: 'join.officer.title',
-        pitchKey: 'join.officer.pitch',
-        benefitKeys: ['join.officer.b1', 'join.officer.b2', 'join.officer.b3'],
-        ctaKey: 'join.officer.cta',
     },
 ];
 

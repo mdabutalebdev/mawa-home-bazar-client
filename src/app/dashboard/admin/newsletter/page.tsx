@@ -7,7 +7,7 @@ import { useGetNewsletterSubscribersQuery } from '@/redux/api/newsletterApi';
 /**
  * Admin → Newsletter subscribers.
  * Read-only list of everyone who subscribed via the storefront footer,
- * backed by GET /api/newsletter (admin/superadmin). Supports search,
+ * backed by GET /api/newsletter (admin). Supports search,
  * pagination and CSV export of the current filter.
  */
 export default function NewsletterPage() {

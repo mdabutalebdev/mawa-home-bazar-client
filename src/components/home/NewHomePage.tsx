@@ -10,12 +10,19 @@ import { LuX, LuSearch } from 'react-icons/lu';
 import HeroSection from './HeroSection';
 import PromoBanner from './PromoBanner';
 import CategoryExpertise from './CategoryExpertise';
-import CtaBanner from './CtaBanner';
-import TrustStrip from './TrustStrip';
+import ReviewsSection from './ReviewsSection';
 import FlashSale from './FlashSale';
 import DealsRow from './DealsRow';
 import BestSellers from './BestSellers';
 import SectionHeader from './SectionHeader';
+// Admin-managed landing sections (Site Content → Home Sections).
+import StatsBar from './StatsBar';
+import AboutSection from './AboutSection';
+import ServicesSection from './ServicesSection';
+import FeaturesSection from './FeaturesSection';
+import CategoryShowcaseSection from './CategoryShowcaseSection';
+import HowItWorksSection from './HowItWorksSection';
+import ExperienceSection from './ExperienceSection';
 
 const LIMIT = 20;
 
@@ -124,24 +131,31 @@ const NewHomePage: React.FC = () => {
         <div
             className="min-h-screen"
             style={{
-                background:
-                    'radial-gradient(55% 45% at 88% 0%, rgba(var(--color-primary-rgb),0.06), transparent 70%),' +
-                    'radial-gradient(45% 40% at 0% 22%, rgba(var(--color-primary-rgb),0.04), transparent 70%),' +
-                    '#F8FAFC',
+                // Site-wide soft warm off-white; white cards sit on top for a
+                // clean, professional contrast.
+                background: '#FBF9F5',
             }}
         >
             <HeroSection />
-            <TrustStrip />
+            {/* Services — image cards right under the hero. Each opens the
+                service-request form (admin-managed). */}
+            <ServicesSection />
+            {/* Highlight stats (admin-managed). */}
+            <StatsBar />
             <CategoryExpertise />
             {!searchTerm && !selectedCategory && (
                 <>
+                    {/* About us — first content section (admin-managed). */}
+                    <AboutSection />
                     <FlashSale />
                     <DealsRow />
+                    {/* Special features (admin-managed). */}
+                    <FeaturesSection />
                     <BestSellers />
                 </>
             )}
 
-            <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-6">
+            <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6">
 
                 {/* Text Search Results Banner */}
                 {searchTerm && (
@@ -238,7 +252,7 @@ const NewHomePage: React.FC = () => {
             {/* Mid-page promo banner — admin-managed, sits between Popular and New Arrivals */}
             <PromoBanner />
 
-            <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-6">
+            <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6">
                 {/* New Arrivals */}
                 <div className="mb-4 sm:mb-5 mt-4 sm:mt-6">
                     <SectionHeader
@@ -346,7 +360,23 @@ const NewHomePage: React.FC = () => {
                 )}
             </div>
 
-            <CtaBanner />
+            {/* Landing sections rendered only on the un-filtered homepage. */}
+            {!searchTerm && !selectedCategory && (
+                <>
+                    {/* Category chip strip — hidden by default because
+                        <CategoryExpertise /> at the top of the page already
+                        renders the dense shopbasebd-style category grid. If the
+                        admin re-enables the "Category Showcase" section from
+                        Site Content, the chip list appears here too. */}
+                    <CategoryShowcaseSection />
+                    {/* How it works — numbered step cards (admin-managed). */}
+                    <HowItWorksSection />
+                    {/* Experience — achievement cards. */}
+                    <ExperienceSection />
+                    {/* Dropshipper reviews — admin-managed testimonial carousel. */}
+                    <ReviewsSection />
+                </>
+            )}
         </div>
     );
 };

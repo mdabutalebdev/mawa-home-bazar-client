@@ -49,11 +49,11 @@ function AuthGuard({ children, requiredRole }: AuthGuardProps) {
         ? (Array.isArray(requiredRole) ? requiredRole : [requiredRole])
         : null;
 
-    // Superadmin is a strict superset of admin — it can access everything an admin can,
-    // including admin-only routes. A superadmin-only route still excludes plain admins.
+    // Admin is the single full-power role — it can access everything, including
+    // any role-gated route.
     const roleAllowed =
         !allowedRoles ||
-        user?.role === 'superadmin' ||
+        user?.role === 'admin' ||
         (!!user?.role && allowedRoles.includes(user.role));
 
     useEffect(() => {

@@ -77,7 +77,7 @@ const GoogleSignInButton: React.FC<Props> = ({ redirectPath, label = 'Continue w
                     style: { borderRadius: '10px', background: 'var(--color-primary)', color: '#fff' },
                     icon: '✅',
                 });
-                const isStaff = user.role === 'admin' || user.role === 'superadmin';
+                const isStaff = user.role === 'admin';
                 if (isStaff) {
                     router.push(redirectPath && redirectPath.startsWith('/dashboard/admin') ? redirectPath : '/dashboard/admin');
                 } else {

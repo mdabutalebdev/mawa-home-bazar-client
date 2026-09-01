@@ -9,7 +9,7 @@ export interface ILoginAsUser {
     email: string;
     phone?: string;
     avatar?: string;
-    role: 'user' | 'admin' | 'superadmin';
+    role: 'user' | 'admin';
 }
 
 export interface ILoginAsResponse {

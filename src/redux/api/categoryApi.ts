@@ -46,6 +46,30 @@ export const categoryApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: ['Categories'],
         }),
+
+        // ── Company-scoped categories ──
+        // Categories a seller may pick when uploading a product: global + own.
+        getSellerCategories: builder.query({
+            query: () => '/categories/for-seller',
+            providesTags: ['Categories'],
+        }),
+        // A company's own categories (for its dashboard).
+        getMyCompanyCategories: builder.query({
+            query: () => '/categories/company/mine',
+            providesTags: ['Categories'],
+        }),
+        createCompanyCategory: builder.mutation({
+            query: (data) => ({ url: '/categories/company', method: 'POST', body: data }),
+            invalidatesTags: ['Categories'],
+        }),
+        updateCompanyCategory: builder.mutation({
+            query: ({ id, data }) => ({ url: `/categories/company/${id}`, method: 'PATCH', body: data }),
+            invalidatesTags: ['Categories'],
+        }),
+        deleteCompanyCategory: builder.mutation({
+            query: (id) => ({ url: `/categories/company/${id}`, method: 'DELETE' }),
+            invalidatesTags: ['Categories'],
+        }),
     }),
 });
 
@@ -56,4 +80,9 @@ export const {
     useCreateCategoryMutation,
     useUpdateCategoryMutation,
     useDeleteCategoryMutation,
+    useGetSellerCategoriesQuery,
+    useGetMyCompanyCategoriesQuery,
+    useCreateCompanyCategoryMutation,
+    useUpdateCompanyCategoryMutation,
+    useDeleteCompanyCategoryMutation,
 } = categoryApi;
