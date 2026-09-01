@@ -13,6 +13,9 @@ import {
 } from 'react-icons/lu';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import Logo from '@/components/shared/Logo';
+import { useGetDealersQuery } from '@/redux/api/dealerApi';
+import { useGetCompaniesQuery } from '@/redux/api/companyApi';
+import { useGetRetailersQuery } from '@/redux/api/retailerApi';
 
 interface AdminLayoutProps { children: React.ReactNode; }
 
@@ -73,6 +76,9 @@ const menuSections = [
     {
         label: 'Users & Access',
         items: [
+            // Applications = the pending row of Partners, promoted so a new signup
+            // is one click away. The badge fills in at render time.
+            { name: 'Applications', href: '/dashboard/admin/partners?status=pending', icon: LuInbox, submenu: null, badgeKey: 'partnersPending' as const },
             // Nothing trades until the owner approves it here, so it sits above the user list.
             { name: 'Partners', href: '/dashboard/admin/partners', icon: LuHandshake, submenu: null },
             { name: 'Users', href: '/dashboard/admin/customers', icon: LuUsers, submenu: null },
@@ -98,6 +104,21 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     const pathname = usePathname();
     const router = useRouter();
 
+    // Pending applications badge. limit:1 → only meta.total is read, so this
+    // stays cheap even though it lives in the layout. Polls every 60s so a new
+    // signup shows up without a full page refresh.
+    const pendingArgs = { status: 'pending', limit: 1 } as const;
+    const pendingPoll = { pollingInterval: 60_000 } as const;
+    const dealerPending = useGetDealersQuery(pendingArgs, pendingPoll);
+    const companyPending = useGetCompaniesQuery(pendingArgs, pendingPoll);
+    const retailerPending = useGetRetailersQuery(pendingArgs, pendingPoll);
+    const badges: Record<string, number> = {
+        partnersPending:
+            Number((dealerPending.data as any)?.meta?.total ?? 0) +
+            Number((companyPending.data as any)?.meta?.total ?? 0) +
+            Number((retailerPending.data as any)?.meta?.total ?? 0),
+    };
+
     useEffect(() => { setMobileOpen(false); }, [pathname]);
 
     useEffect(() => {
@@ -110,9 +131,13 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
     const handleLogout = () => { localStorage.removeItem('token'); router.push('/'); };
 
-    const isActive = (href: string) => pathname === href;
+    // Some hrefs embed a filter (e.g. "…/partners?status=pending"). Compare on
+    // the path portion only so the sidebar still highlights when that link is
+    // the current page.
+    const pathOnly = (href: string) => href.split('?')[0];
+    const isActive = (href: string) => pathname === pathOnly(href);
     const isParentActive = (item: typeof allMenuItems[0]) =>
-        item.submenu ? item.submenu.some(s => pathname.startsWith(s.href)) : pathname === item.href;
+        item.submenu ? item.submenu.some(s => pathname.startsWith(pathOnly(s.href))) : pathname === pathOnly(item.href);
 
     const Sidebar = () => (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -173,6 +198,23 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                                             <item.icon size={16} />
                                             <span>{item.name}</span>
                                         </div>
+                                        {(() => {
+                                            const badgeKey = (item as { badgeKey?: string }).badgeKey;
+                                            const count = badgeKey ? badges[badgeKey] : 0;
+                                            if (count > 0) {
+                                                return (
+                                                    <span style={{
+                                                        minWidth: '18px', height: '18px', padding: '0 5px',
+                                                        borderRadius: '9px', background: '#EF4444', color: '#fff',
+                                                        fontSize: '10px', fontWeight: 700, lineHeight: 1,
+                                                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                                    }}>
+                                                        {count > 99 ? '99+' : count}
+                                                    </span>
+                                                );
+                                            }
+                                            return null;
+                                        })()}
                                         {hasSubmenu && (
                                             <LuChevronDown size={13} style={{
                                                 transform: isExpanded ? 'rotate(180deg)' : 'none',

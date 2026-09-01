@@ -6,6 +6,7 @@ import { useAppDispatch } from '@/redux/hooks';
 import { loginSuccess } from '@/redux/slices/authSlice';
 import { useGoogleLoginMutation } from '@/redux/api/authApi';
 import { toast } from 'react-hot-toast';
+import { dashboardForRole } from '@/lib/dashboardForRole';
 
 const GSI_SRC = 'https://accounts.google.com/gsi/client';
 
@@ -77,9 +78,15 @@ const GoogleSignInButton: React.FC<Props> = ({ redirectPath, label = 'Continue w
                     style: { borderRadius: '10px', background: 'var(--color-primary)', color: '#fff' },
                     icon: '✅',
                 });
-                const isStaff = user.role === 'admin';
-                if (isStaff) {
-                    router.push(redirectPath && redirectPath.startsWith('/dashboard/admin') ? redirectPath : '/dashboard/admin');
+                // Partner roles (admin/company/dealer/retailer) get routed to
+                // their own dashboard so they aren't dropped into the customer
+                // panel. Regular customers keep the "back to where they were"
+                // redirect, or the homepage as the safe default.
+                const homeDashboard = dashboardForRole(user.role);
+                const isPartner = user.role !== 'user';
+                if (isPartner) {
+                    const honorsRedirect = redirectPath && redirectPath.startsWith(homeDashboard);
+                    router.push(honorsRedirect ? redirectPath : homeDashboard);
                 } else {
                     router.push(redirectPath || '/');
                 }

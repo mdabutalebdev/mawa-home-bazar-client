@@ -11,6 +11,7 @@ import { useMergeWishlistMutation } from '@/redux/api/userApi';
 import { toast } from 'react-hot-toast';
 import { LuLock, LuEye, LuEyeOff, LuArrowRight, LuCircleAlert, LuUser } from 'react-icons/lu';
 import GoogleSignInButton from '@/components/shared/GoogleSignInButton';
+import { dashboardForRole } from '@/lib/dashboardForRole';
 
 const inputCls =
     'w-full pl-11 pr-4 py-3 rounded-lg border border-slate-200 bg-white text-sm text-slate-800 placeholder-slate-400 outline-none transition focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/15';
@@ -72,15 +73,22 @@ const LoginPageInner = () => {
             }
 
             // ── Smart Redirect Logic ──
-            // Staff (admin / super admin) ALWAYS land in the admin panel. A redirect
-            // param is honored only when it points to an admin route (deep link) — a
-            // customer-area redirect must never trap an admin in the user dashboard.
-            const isStaff = user.role === 'admin';
-            if (isStaff) {
-                router.push(redirectPath && redirectPath.startsWith('/dashboard/admin') ? redirectPath : '/dashboard/admin');
+            // Every non-customer role has its OWN dashboard (admin / company /
+            // dealer / retailer). Route them straight there so partners aren't
+            // dropped into the customer account panel. A ?redirect= is honored
+            // only when it points inside that role's own dashboard tree — a
+            // customer-area redirect must never trap a partner in the user panel.
+            const homeDashboard = dashboardForRole(user.role);
+            const isPartner = user.role !== 'user';
+
+            if (isPartner) {
+                const honorsRedirect = redirectPath && redirectPath.startsWith(homeDashboard);
+                router.push(honorsRedirect ? redirectPath : homeDashboard);
             } else if (redirectPath) {
                 router.push(redirectPath);
             } else {
+                // Regular customers: keep the "no orders → go home" nicety so a
+                // fresh account isn't dropped into an empty dashboard.
                 try {
                     const ordersRes = await fetch(
                         `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/orders/my?limit=1`,

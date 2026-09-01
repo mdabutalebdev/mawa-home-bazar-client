@@ -48,6 +48,10 @@ const NewFooter: React.FC = () => {
             ? 'বাংলাদেশের বিশ্বস্ত অনলাইন মার্কেটপ্লেস — কম দামে ভালো প্রোডাক্ট, দেশজুড়ে ফাস্ট ডেলিভারি।'
             : 'A trusted online marketplace across Bangladesh — quality products at fair prices, delivered fast.',
         quickLinks: isBn ? 'কুইক লিংক' : 'Quick Links',
+        partner:    isBn ? 'পার্টনার হন' : 'Partner With Us',
+        joinCompany:  isBn ? 'কোম্পানি হিসেবে জয়েন করুন'  : 'Become a Company',
+        joinDealer:   isBn ? 'ডিলার হিসেবে জয়েন করুন'   : 'Become a Dealer',
+        joinRetailer: isBn ? 'রিটেইলার হিসেবে জয়েন করুন' : 'Become a Retailer',
         support:    isBn ? 'সাপোর্ট'   : 'Support',
         weAccept:   isBn ? 'পেমেন্ট'   : 'We Accept',
         home:       isBn ? 'হোম'                    : 'Home',
@@ -204,8 +208,19 @@ const NewFooter: React.FC = () => {
                             </ul>
                         </div>
 
+                        {/* Partner With Us — routes visitors to the three application forms */}
+                        <div className="lg:col-span-2">
+                            <h4 className="text-sm font-extrabold text-white mb-4 uppercase tracking-wide">{T.partner}</h4>
+                            <ul className="space-y-2.5">
+                                <li><Link href="/join/company"  className={linkCls}>{T.joinCompany}</Link></li>
+                                <li><Link href="/join/dealer"   className={linkCls}>{T.joinDealer}</Link></li>
+                                <li><Link href="/join/retailer" className={linkCls}>{T.joinRetailer}</Link></li>
+                                <li><Link href="/join"          className={linkCls}>{isBn ? 'সব অপশন দেখুন' : 'See all options'}</Link></li>
+                            </ul>
+                        </div>
+
                         {/* Support */}
-                        <div className="lg:col-span-3">
+                        <div className="lg:col-span-2">
                             <h4 className="text-sm font-extrabold text-white mb-4 uppercase tracking-wide">{T.support}</h4>
                             <ul className="space-y-2.5">
                                 {phoneList.slice(1).map((p) => (
@@ -246,7 +261,7 @@ const NewFooter: React.FC = () => {
                         </div>
 
                         {/* Newsletter + payments */}
-                        <div className="lg:col-span-3">
+                        <div className="lg:col-span-2">
                             <h4 className="text-sm font-extrabold text-white mb-3 uppercase tracking-wide">{T.subTitle}</h4>
                             <p className="text-xs text-white/70 mb-3 leading-relaxed">{T.subText}</p>
                             <form onSubmit={handleSubscribe} className="flex flex-col gap-2">

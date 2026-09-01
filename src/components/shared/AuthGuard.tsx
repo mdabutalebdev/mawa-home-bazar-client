@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import type { UserRole } from '@/redux/slices/authSlice';
+import { dashboardForRole } from '@/lib/dashboardForRole';
 
 type Role = UserRole;
 
@@ -66,9 +67,13 @@ function AuthGuard({ children, requiredRole }: AuthGuardProps) {
         }
 
         if (!roleAllowed) {
-            router.replace('/');
+            // Send them to THEIR own dashboard, not the homepage — a company
+            // user hitting /dashboard/user should land in /dashboard/company,
+            // not the storefront. Falls back to '/' if the role is unknown.
+            const own = dashboardForRole(user?.role);
+            router.replace(own || '/');
         }
-    }, [settling, authed, roleAllowed, pathname, router]);
+    }, [settling, authed, roleAllowed, pathname, router, user?.role]);
 
     // Still hydrating / restoring the session: render a lightweight loader.
     if (settling) {
