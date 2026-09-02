@@ -443,74 +443,30 @@ function ServicesSectionTab({ data, setData }: { data: any; setData: any }) {
 }
 
 /* ─── SERVICE COMPANIES TAB ───
-   Admin-managed showcase of partner / service-provider companies. Same shape
-   as ServicesSection but each card carries a company logo + bilingual title +
-   bilingual description + optional external link. Rendered on the homepage
-   right before the product category showcase. */
+   Admin-managed showcase of partner / service-provider companies.
+   Title and subtitle are managed here, but the items themselves are
+   dynamically fetched from the Company collection (type: 'service'). */
 function ServiceCompaniesSectionTab({ data, setData }: { data: any; setData: any }) {
-    const s = data.serviceCompaniesSection || { enabled: true, items: [] };
+    const s = data.serviceCompaniesSection || { enabled: true };
     const set = (patch: any) =>
         setData((p: any) => ({ ...p, serviceCompaniesSection: { ...(p.serviceCompaniesSection || {}), ...patch } }));
-    const setItems = (items: any[]) => set({ items });
-
-    const add = () => setItems([...(s.items || []), { logo: '', title: '', description: '', link: '', active: true, order: (s.items || []).length }]);
-    const update = (idx: number, field: string, v: any) => {
-        const items = [...s.items]; items[idx] = { ...items[idx], [field]: v }; setItems(items);
-    };
-    const remove = (idx: number) => setItems(s.items.filter((_: any, i: number) => i !== idx));
-    const move = (idx: number, dir: 'up' | 'down') => setItems(moveItem(s.items, idx, dir));
 
     return (
         <div>
-            <EnabledToggle enabled={s.enabled !== false} onChange={(v) => set({ enabled: v })} hint="Logo cards for partner / service-provider companies. Each card shows the logo, title, and short description. Optionally link to the company page. Up to 24 shown; hidden ones are skipped." />
+            <EnabledToggle enabled={s.enabled !== false} onChange={(v) => set({ enabled: v })} hint="Showcase for partner / service-provider companies. Rendered on the homepage." />
             <div style={card}>
                 <div style={{ display: 'grid', gap: '12px' }}>
                     <BiInput label="Section Title" value={s.title} onChange={v => set({ title: v })} placeholderEn="Our Company Services" placeholderBn="আমাদের কোম্পানি সার্ভিস সমূহ" />
                     <BiInput label="Subtitle" value={s.subtitle} onChange={v => set({ subtitle: v })} placeholderEn="Our trusted partners" placeholderBn="আমাদের সাথে সংযুক্ত পার্টনার প্রতিষ্ঠান ও সার্ভিস সমূহ।" />
                 </div>
             </div>
-            <div style={card}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                    <h3 style={{ fontSize: '14px', fontWeight: 700, margin: 0 }}>Companies ({(s.items || []).length})</h3>
-                    <button onClick={add} style={btnSmall}><LuPlus size={13} /> Add Company</button>
-                </div>
-                {(s.items || []).map((it: any, idx: number) => (
-                    <div key={idx} style={{ border: '1px solid #eee', borderRadius: '8px', padding: '12px', marginBottom: '10px', background: '#fafafa' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                            <span style={{ fontSize: '11px', fontWeight: 700, color: '#666' }}>Company {idx + 1}</span>
-                            <div style={{ display: 'flex', gap: '2px' }}>
-                                <button onClick={() => move(idx, 'up')} disabled={idx === 0} style={{ ...btnSmall, padding: '6px 8px', opacity: idx === 0 ? 0.3 : 1 }}><LuArrowUp size={12} /></button>
-                                <button onClick={() => move(idx, 'down')} disabled={idx === s.items.length - 1} style={{ ...btnSmall, padding: '6px 8px', opacity: idx === s.items.length - 1 ? 0.3 : 1 }}><LuArrowDown size={12} /></button>
-                                <button
-                                    onClick={() => update(idx, 'active', !(it.active !== false))}
-                                    style={{ ...btnSmall, padding: '6px 10px', background: it.active !== false ? '#dcfce7' : '#f3f4f6', color: it.active !== false ? '#16a34a' : '#666' }}
-                                    title={it.active !== false ? 'Visible — click to hide' : 'Hidden — click to show'}
-                                >
-                                    {it.active !== false ? 'Visible' : 'Hidden'}
-                                </button>
-                                <button onClick={() => remove(idx)} style={btnDanger}><LuTrash2 size={13} /></button>
-                            </div>
-                        </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr', gap: '12px', alignItems: 'start' }}>
-                            <SingleImageUploader label="Company logo" value={it.logo || ''} onChange={(url: string) => update(idx, 'logo', url)} />
-                            <div style={{ display: 'grid', gap: '8px' }}>
-                                <BiInput label="Company name" value={it.title} onChange={v => update(idx, 'title', v)} placeholderEn="Company name" placeholderBn="কোম্পানির নাম" />
-                                <BiTextarea label="Description" value={it.description} onChange={v => update(idx, 'description', v)} rows={2} placeholderEn="Short description of what the company offers" placeholderBn="কোম্পানি সংক্রান্ত সংক্ষিপ্ত বিবরণ" />
-                                <div>
-                                    <label style={label}>Link (optional)</label>
-                                    <input
-                                        value={it.link || ''}
-                                        onChange={e => update(idx, 'link', e.target.value)}
-                                        placeholder="https://example.com  or  /companies/slug"
-                                        style={input}
-                                    />
-                                    <p style={{ fontSize: '11px', color: '#888', margin: '4px 0 0' }}>Blank = card is non-clickable. External URLs open in a new tab.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                ))}
-                {(s.items || []).length === 0 && <p style={{ fontSize: '12px', color: '#bbb', textAlign: 'center', padding: '12px' }}>No companies yet. Click “Add Company”.</p>}
+            
+            <div style={{ ...card, background: '#f8fafc', borderColor: '#e2e8f0', textAlign: 'center', padding: '30px' }}>
+                <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>Company Services are now dynamic!</h3>
+                <p style={{ fontSize: '13px', color: '#64748b', maxWidth: '400px', margin: '0 auto', lineHeight: 1.5 }}>
+                    The service companies shown in this section are automatically fetched from your approved <strong>Companies</strong>. 
+                    To add or remove a service company, go to the <a href="/dashboard/admin/companies" style={{ color: 'var(--color-primary)', fontWeight: 600, textDecoration: 'underline' }}>Companies menu</a> and create a company with Type = &quot;Service&quot;.
+                </p>
             </div>
         </div>
     );
