@@ -28,6 +28,7 @@ export default function DealerOrderRequestsPage() {
             onUpdateStatus={onUpdate}
             statusFilter={status}
             setStatusFilter={setStatus}
+            linkPrefix="/dashboard/dealer/order-requests"
         />
     );
 }

@@ -209,67 +209,59 @@ export default function OrderDetailsPage() {
                 {/* Left Column - Main Details */}
                 <div className="lg:col-span-2 space-y-6">
                     {/* Items Table */}
-                    <div className="bg-white rounded-md border border-gray-200 shadow-sm overflow-hidden">
-                        <div className="p-5 border-b border-gray-100 flex items-center gap-2">
-                            <LuPackage className="text-[var(--color-primary)]" size={20} />
-                            <h2 className="font-bold text-gray-800">Order Items</h2>
-                            <span className="ml-auto bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full font-bold">{order.items.length} Items</span>
+                    <div className="bg-white rounded-md border border-gray-200 overflow-hidden">
+                        <div className="p-4 border-b border-gray-100 flex items-center gap-2">
+                            <LuPackage className="text-[var(--color-primary)]" size={18} />
+                            <h2 className="text-sm font-semibold text-gray-800">Order Items</h2>
+                            <span className="ml-auto bg-gray-50 text-gray-500 border border-gray-100 text-xs px-2 py-0.5 rounded-full font-medium">{order.items.length} Items</span>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full">
                                 <thead className="bg-gray-50">
                                     <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Product</th>
-                                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Price</th>
-                                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Qty</th>
-                                        <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Total</th>
+                                        <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                                        <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                                        <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
+                                        <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
                                     {order.items.map((item: any, idx: number) => (
                                         <tr key={idx} className="hover:bg-gray-50/30 transition-colors">
-                                            <td className="px-6 py-4">
+                                            <td className="px-4 py-3">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-12 h-12 rounded-md bg-gray-50 overflow-hidden border border-gray-100 p-1">
-                                                        {/* Prefer the snapshot taken at purchase time — it is what the
-                                                            customer actually bought, and it survives the product being
-                                                            edited or deleted later. */}
+                                                    <div className="w-10 h-10 rounded-md bg-gray-50 overflow-hidden border border-gray-100 p-1">
                                                         <img src={item.thumbnail || item.product?.thumbnail || ''} alt={item.name} className="w-full h-full object-cover rounded-sm" />
                                                     </div>
                                                     <div>
-                                                        <p className="text-sm font-bold text-gray-800">{item.name}</p>
+                                                        <p className="text-[13px] font-medium text-gray-800">{item.name}</p>
                                                         {(item.color || item.size) && (
-                                                            <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                                            <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                                                                 {item.color && (
-                                                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-gray-500 bg-gray-50 px-2 py-0.5 rounded border border-gray-100">
+                                                                    <span className="inline-flex items-center gap-1 text-[10px] text-gray-500 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100">
                                                                         🎨 {item.color}
                                                                     </span>
                                                                 )}
                                                                 {item.size && (
-                                                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-gray-500 bg-gray-50 px-2 py-0.5 rounded border border-gray-100">
+                                                                    <span className="inline-flex items-center gap-1 text-[10px] text-gray-500 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100">
                                                                         📏 {item.size}
                                                                     </span>
                                                                 )}
                                                             </div>
                                                         )}
-                                                        {item.variant && (
-                                                            <p className="text-[10px] text-gray-400 font-bold uppercase mt-0.5">
-                                                                SKU: {item.variant.sku}
-                                                            </p>
-                                                        )}
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 text-sm text-gray-600">৳{(item.price || 0).toLocaleString()}</td>
-                                            <td className="px-6 py-4 text-sm text-gray-600">x{item.quantity}</td>
-                                            <td className="px-6 py-4 text-right text-sm font-bold text-gray-800">৳{(item.subtotal || (item.price || 0) * (item.quantity || 1)).toLocaleString()}</td>
+                                            <td className="px-4 py-3 text-[13px] text-gray-600">৳{item.price?.toLocaleString()}</td>
+                                            <td className="px-4 py-3 text-[13px] text-gray-600 font-mono">x{item.quantity}</td>
+                                            <td className="px-4 py-3 text-right text-[13px] font-medium text-gray-800">৳{(item.price * item.quantity).toLocaleString()}</td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
                         </div>
                         {/* Summary */}
-                        <div className="bg-gray-50/50 p-6 border-t border-gray-100">
+                        <div className="bg-gray-50/50 p-4 border-t border-gray-100">
                             <div className="flex flex-col gap-2 ml-auto max-w-xs">
                                 <div className="flex justify-between text-sm text-gray-500">
                                     <span>Subtotal:</span>
@@ -303,32 +295,32 @@ export default function OrderDetailsPage() {
                     </div>
 
                     {/* Timeline */}
-                    <div className="bg-white rounded-md border border-gray-200 shadow-sm p-6">
-                        <div className="flex items-center gap-2 mb-6 text-gray-800">
-                            <LuClock className="text-[var(--color-primary)]" size={20} />
-                            <h2 className="font-bold">Order Journey</h2>
+                    <div className="bg-white rounded-md border border-gray-200 p-5">
+                        <div className="flex items-center gap-2 mb-5 text-gray-800">
+                            <LuClock className="text-[var(--color-primary)]" size={18} />
+                            <h2 className="text-sm font-semibold text-gray-800">Order Journey</h2>
                         </div>
-                        <div className="space-y-6">
+                        <div className="space-y-5">
                             {order.timeline?.map((step: any, idx: number) => (
                                 <div key={idx} className="relative flex gap-4">
                                     {idx !== order.timeline.length - 1 && (
-                                        <div className="absolute left-3 top-7 bottom-0 w-px bg-gray-100"></div>
+                                        <div className="absolute left-[11px] top-6 bottom-0 w-px bg-gray-100"></div>
                                     )}
-                                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 z-10 bg-white ${idx === 0 ? 'border-[var(--color-primary)] text-[var(--color-primary)]' : 'border-gray-200 text-gray-400'
+                                    <div className={`w-6 h-6 rounded-full border flex items-center justify-center shrink-0 z-10 bg-white ${idx === 0 ? 'border-[var(--color-primary)] text-[var(--color-primary)]' : 'border-gray-200 text-gray-400'
                                         }`}>
-                                        <div className={`w-2 h-2 rounded-full ${idx === 0 ? 'bg-[var(--color-primary)]' : 'bg-gray-200'}`}></div>
+                                        <div className={`w-1.5 h-1.5 rounded-full ${idx === 0 ? 'bg-[var(--color-primary)]' : 'bg-gray-200'}`}></div>
                                     </div>
-                                    <div className="flex-1 -mt-1">
-                                        <div className="flex justify-between">
-                                            <p className="text-sm font-bold text-gray-800">{getStatusConfig(step.status).label}</p>
-                                            <span className="text-[10px] text-gray-400 font-bold whitespace-nowrap">
+                                    <div className="flex-1 -mt-0.5">
+                                        <div className="flex justify-between items-start">
+                                            <p className="text-sm font-medium text-gray-800">{getStatusConfig(step.status).label}</p>
+                                            <span className="text-[10px] text-gray-400 whitespace-nowrap">
                                                 {step.createdAt ? new Date(step.createdAt).toLocaleString() : ''}
                                             </span>
                                         </div>
-                                        <p className="text-sm text-gray-500 mt-1">{step.note}</p>
+                                        {step.note && <p className="text-[13px] text-gray-500 mt-0.5">{step.note}</p>}
                                     </div>
                                 </div>
-                            )) || <p className="text-gray-400 text-center italic py-4">No timeline available</p>}
+                            )) || <p className="text-gray-400 text-center text-sm italic py-4">No timeline available</p>}
                         </div>
                     </div>
                 </div>
@@ -336,46 +328,46 @@ export default function OrderDetailsPage() {
                 {/* Right Column - Customer & Actions */}
                 <div className="space-y-6">
                     {/* Customer Info */}
-                    <div className="bg-white rounded-md border border-gray-200 shadow-sm p-6">
+                    <div className="bg-white rounded-md border border-gray-200 p-5">
                         <div className="flex items-center gap-2 mb-4 text-gray-800">
-                            <LuUser className="text-[var(--color-primary)]" size={20} />
-                            <h2 className="font-bold">Customer Details</h2>
+                            <LuUser className="text-[var(--color-primary)]" size={18} />
+                            <h2 className="text-sm font-semibold text-gray-800">Customer Details</h2>
                         </div>
                         <div className="space-y-4">
                             <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 rounded-md bg-gray-50 border border-gray-100 flex items-center justify-center font-bold text-[var(--color-primary)]">
+                                <div className="w-10 h-10 rounded-md bg-gray-50 border border-gray-100 flex items-center justify-center font-bold text-[var(--color-primary)] text-sm">
                                     {(order.user?.firstName || order.shippingAddress?.fullName || '?')[0]}{(order.user?.lastName || '')[0]}
                                 </div>
                                 <div>
-                                    <p className="font-bold text-gray-800">{order.user?.firstName ? `${order.user.firstName} ${order.user.lastName || ''}` : order.shippingAddress?.fullName || 'Guest'}</p>
-                                    <p className="text-xs text-gray-400">Customer ID: {order.user?._id?.slice(-8)}</p>
+                                    <p className="font-medium text-gray-800 text-sm">{order.user?.firstName ? `${order.user.firstName} ${order.user.lastName || ''}` : order.shippingAddress?.fullName || 'Guest'}</p>
+                                    <p className="text-[11px] text-gray-400">Customer ID: {order.user?._id?.slice(-8)}</p>
                                 </div>
                             </div>
-                            <div className="space-y-2 pt-2 border-t border-gray-50">
-                                <div className="flex items-center gap-3 text-sm text-gray-600">
-                                    <LuMail size={14} />
-                                    <span>{order.user?.email}</span>
+                            <div className="space-y-2 pt-3 border-t border-gray-50">
+                                <div className="flex items-center gap-3 text-[13px] text-gray-600">
+                                    <LuMail size={14} className="text-gray-400" />
+                                    <span>{order.user?.email || 'N/A'}</span>
                                 </div>
-                                <div className="flex items-center gap-3 text-sm text-gray-600">
-                                    <LuPhone size={14} />
-                                    <span>{order.user?.phone || order.shippingAddress?.phone || 'N/A'}</span>
+                                <div className="flex items-center gap-3 text-[13px] text-gray-600">
+                                    <LuPhone size={14} className="text-gray-400" />
+                                    <span>{order.shippingAddress?.phone || order.user?.phone || 'N/A'}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     {/* Shipping Address */}
-                    <div className="bg-white rounded-md border border-gray-200 shadow-sm p-6">
+                    <div className="bg-white rounded-md border border-gray-200 p-5">
                         <div className="flex items-center gap-2 mb-4 text-gray-800">
-                            <LuMapPin className="text-[var(--color-primary)]" size={20} />
-                            <h2 className="font-bold">Shipping To</h2>
+                            <LuMapPin className="text-[var(--color-primary)]" size={18} />
+                            <h2 className="text-sm font-semibold text-gray-800">Shipping To</h2>
                         </div>
-                        <div className="text-sm text-gray-600 leading-relaxed">
-                            <p className="font-bold text-gray-800 mb-1">{order.shippingAddress?.fullName || 'N/A'}</p>
+                        <div className="text-[13px] text-gray-600 leading-relaxed">
+                            <p className="font-medium text-gray-800 mb-1">{order.shippingAddress?.fullName || 'N/A'}</p>
                             <p>{order.shippingAddress?.address || ''}</p>
                             <p>{[order.shippingAddress?.area, order.shippingAddress?.city, order.shippingAddress?.postalCode].filter(Boolean).join(', ') || ''}</p>
                             {order.shippingAddress?.phone && <p>{order.shippingAddress.phone}</p>}
-                            <p className="mt-2 font-bold text-gray-400 flex items-center gap-1 uppercase text-[10px]">
+                            <p className="mt-3 font-medium text-gray-400 flex items-center gap-1.5 uppercase text-[10px] bg-gray-50 p-2 rounded-md border border-gray-100 w-fit">
                                 <LuTruck size={12} />
                                 {order.shippingMethod || 'Standard'} Delivery
                             </p>
@@ -383,10 +375,10 @@ export default function OrderDetailsPage() {
                     </div>
 
                     {/* Payment Information */}
-                    <div className="bg-white rounded-md border border-gray-200 shadow-sm overflow-hidden">
-                        <div className="flex items-center gap-2 px-6 py-4 border-b border-gray-100 text-gray-800">
-                            <LuDollarSign className="text-[var(--color-primary)]" size={20} />
-                            <h2 className="font-bold">Payment Information</h2>
+                    <div className="bg-white rounded-md border border-gray-200 overflow-hidden">
+                        <div className="flex items-center gap-2 px-5 py-4 border-b border-gray-100 text-gray-800">
+                            <LuDollarSign className="text-[var(--color-primary)]" size={18} />
+                            <h2 className="text-sm font-semibold text-gray-800">Payment Information</h2>
                         </div>
 
                         {/* Method Badge */}
@@ -395,19 +387,19 @@ export default function OrderDetailsPage() {
                             const label = order.paymentMethod ? paymentMethodLabel(order.paymentMethod) : '—';
                             const badge = paymentMethodBadge[methodKey] || { bg: '#f3f4f6', color: '#6b7280' };
                             return (
-                                <div className="px-6 py-4 flex items-center gap-3" style={{ background: badge.bg }}>
-                                    <div className="w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm" style={{ background: badge.color, color: 'white' }}>
+                                <div className="px-5 py-4 flex items-center gap-3" style={{ background: badge.bg }}>
+                                    <div className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm" style={{ background: badge.color, color: 'white' }}>
                                         {label.slice(0, 2)}
                                     </div>
                                     <div>
-                                        <p className="font-black text-base" style={{ color: badge.color }}>{label}</p>
-                                        <p className="text-xs text-gray-500 font-medium">Payment Method</p>
+                                        <p className="font-bold text-sm" style={{ color: badge.color }}>{label}</p>
+                                        <p className="text-[11px] text-gray-500 font-medium">Payment Method</p>
                                     </div>
                                     <div className="ml-auto">
-                                        <span className={`text-xs font-bold px-3 py-1.5 rounded-full ${
-                                            order.paymentStatus === 'paid' ? 'bg-green-100 text-green-700' :
-                                            order.paymentStatus === 'failed' ? 'bg-red-100 text-red-700' :
-                                            'bg-yellow-100 text-yellow-700'
+                                        <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${
+                                            order.paymentStatus === 'paid' ? 'bg-green-50 text-green-700 border border-green-200' :
+                                            order.paymentStatus === 'failed' ? 'bg-red-50 text-red-700 border border-red-200' :
+                                            'bg-yellow-50 text-yellow-700 border border-yellow-200'
                                         }`}>
                                             {order.paymentStatus?.toUpperCase()}
                                         </span>

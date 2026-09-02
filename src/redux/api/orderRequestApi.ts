@@ -16,9 +16,19 @@ export const orderRequestApi = baseApi.injectEndpoints({
             query: () => '/order-requests/dealer/counts',
             providesTags: ['OrderRequests'],
         }),
+        // Dealer: single request.
+        getDealerSingleOrderRequest: builder.query({
+            query: (id) => ({ url: `/order-requests/dealer/${id}` }),
+            providesTags: ['OrderRequests'],
+        }),
         // Admin: every request.
         getAdminOrderRequests: builder.query({
             query: (params) => ({ url: '/order-requests/admin', params }),
+            providesTags: ['OrderRequests'],
+        }),
+        // Admin: single request.
+        getAdminSingleOrderRequest: builder.query({
+            query: (id) => ({ url: `/order-requests/admin/${id}` }),
             providesTags: ['OrderRequests'],
         }),
         // Dealer (own) or admin: update status / note.
@@ -33,6 +43,8 @@ export const {
     useCreateOrderRequestMutation,
     useGetDealerOrderRequestsQuery,
     useGetDealerOrderRequestCountsQuery,
+    useGetDealerSingleOrderRequestQuery,
     useGetAdminOrderRequestsQuery,
+    useGetAdminSingleOrderRequestQuery,
     useUpdateOrderRequestStatusMutation,
 } = orderRequestApi;

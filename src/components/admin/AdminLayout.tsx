@@ -9,7 +9,7 @@ import {
     LuShoppingCart, LuUser, LuChevronLeft,
     LuLayoutDashboard, LuChartColumn, LuTruck, LuTag, LuStar, LuMapPin,
     LuSettings, LuBell, LuSearch, LuCreditCard, LuZap, LuRefreshCw, LuMail,
-    LuWallet, LuHandshake, LuInbox,
+    LuWallet, LuHandshake, LuInbox, LuWrench,
 } from 'react-icons/lu';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import Logo from '@/components/shared/Logo';
@@ -52,6 +52,7 @@ const menuSections = [
                 ]
             },
             { name: 'Categories', href: '/dashboard/admin/categories', icon: LuLayoutGrid, submenu: null },
+            { name: 'Services', href: '/dashboard/admin/services', icon: LuWrench, submenu: null },
         ],
     },
     // Promotions & engagement
@@ -232,13 +233,14 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                                             {item.submenu!.map((sub) => (
                                                 <Link key={sub.name} href={sub.href}
                                                     style={{
-                                                        display: 'block', padding: '6px 10px', borderRadius: '6px',
-                                                        fontSize: '12px', textDecoration: 'none', marginBottom: '1px',
-                                                        background: isActive(sub.href) ? 'rgba(var(--color-primary-rgb),0.15)' : 'transparent',
-                                                        color: isActive(sub.href) ? 'var(--color-primary)' : '#94A3B8',
-                                                        fontWeight: isActive(sub.href) ? 600 : 400,
-                                                        borderLeft: isActive(sub.href) ? '2px solid var(--color-primary)' : '2px solid transparent',
+                                                        display: 'block', padding: '8px 12px', borderRadius: '6px',
+                                                        fontSize: '13px', textDecoration: 'none', marginBottom: '2px',
+                                                        background: isActive(sub.href) ? 'rgba(255,255,255,0.1)' : 'transparent',
+                                                        color: isActive(sub.href) ? '#ffffff' : '#94a3b8',
+                                                        fontWeight: isActive(sub.href) ? 600 : 500,
                                                     }}
+                                                    onMouseEnter={e => { if (!isActive(sub.href)) { (e.currentTarget as HTMLElement).style.color = '#cbd5e1'; } }}
+                                                    onMouseLeave={e => { if (!isActive(sub.href)) { (e.currentTarget as HTMLElement).style.color = '#94a3b8'; } }}
                                                 >
                                                     {sub.name}
                                                 </Link>

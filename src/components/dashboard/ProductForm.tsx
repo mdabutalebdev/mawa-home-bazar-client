@@ -19,12 +19,13 @@ import {
     useGetProductByIdQuery
 } from '@/redux/api/productApi';
 import { useGetCategoriesQuery } from '@/redux/api/categoryApi';
+import { useGetCompanyServicesQuery } from '@/redux/api/companyServiceApi';
 import { toast } from 'react-hot-toast';
 
 // ── Toggle Switch Component ──────────────────────────────────
 const Toggle = ({ label, name, checked, onChange, color = 'bg-emerald-500' }: any) => (
-    <label className="flex items-center justify-between p-3.5 hover:bg-gray-50 rounded-md transition-all border border-gray-100 cursor-pointer group">
-        <span className="text-sm font-semibold text-gray-600 group-hover:text-gray-900">{label}</span>
+    <label className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-md transition-all border border-gray-200 cursor-pointer group">
+        <span className="text-[13px] font-medium text-gray-700 group-hover:text-gray-900">{label}</span>
         <div className="relative">
             <input type="checkbox" name={name} className="sr-only" checked={checked} onChange={onChange} />
             <div className={`w-11 h-6 rounded-full transition-colors ${checked ? color : 'bg-gray-200'}`}></div>
@@ -36,8 +37,8 @@ const Toggle = ({ label, name, checked, onChange, color = 'bg-emerald-500' }: an
 // ── Input Component ──────────────────────────────────────────
 const Input = ({ label, required, error, ...props }: any) => (
     <div className="space-y-1.5">
-        <label className="text-sm font-semibold text-gray-700">{label} {required && <span className="text-red-400">*</span>}</label>
-        <input className={`w-full px-4 py-2.5 bg-white border rounded-md outline-none focus:ring-1 transition-all text-sm ${error ? 'border-red-400 focus:border-red-500 focus:ring-red-200 bg-red-50/30' : 'border-gray-200 focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)]/10'}`} {...props} />
+        <label className="text-[13px] font-medium text-gray-700">{label} {required && <span className="text-red-400">*</span>}</label>
+        <input className={`w-full px-3.5 py-2.5 bg-white border rounded-md outline-none focus:ring-1 transition-all text-sm ${error ? 'border-red-400 focus:border-red-500 focus:ring-red-200 bg-red-50/30' : 'border-gray-200 focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)]/10'}`} {...props} />
         {error && <p className="text-xs text-red-500 font-medium flex items-center gap-1">⚠ {error}</p>}
     </div>
 );
@@ -45,8 +46,8 @@ const Input = ({ label, required, error, ...props }: any) => (
 // ── Section Header Component ──────────────────────────────────
 const SectionHeader = ({ icon, title, color = 'bg-blue-50 text-blue-600' }: any) => (
     <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
-        <div className={`w-10 h-10 rounded-md flex items-center justify-center ${color}`}>{icon}</div>
-        <h2 className="text-lg font-bold text-gray-800">{title}</h2>
+        <div className={`w-9 h-9 rounded-md flex items-center justify-center ${color}`}>{icon}</div>
+        <h2 className="text-[15px] font-semibold text-gray-800">{title}</h2>
     </div>
 );
 
@@ -61,6 +62,7 @@ const ProductFormInner = ({ productId: propProductId }: { productId?: string }) 
     const [updateProduct, { isLoading: isUpdating }] = useUpdateProductMutation();
     const { data: productToEdit, isLoading: isFetching } = useGetProductByIdQuery(productId, { skip: !isEditing });
     const { data: categoriesData } = useGetCategoriesQuery({});
+    const { data: servicesData } = useGetCompanyServicesQuery({});
 
     const [formData, setFormData] = useState<any>({
         // Basic
@@ -74,7 +76,7 @@ const ProductFormInner = ({ productId: propProductId }: { productId?: string }) 
         // Media
         thumbnail: '', images: [],
         // Organization
-        category: '', subCategory: '',
+        category: '', subCategory: '', serviceId: '',
         // Specs (new)
         insideTheBox: '',
         compatibility: '',
@@ -128,6 +130,7 @@ const ProductFormInner = ({ productId: propProductId }: { productId?: string }) 
                 ...prod,
                 category: prod.category?._id || prod.category || '',
                 subCategory: prod.subCategory?._id || prod.subCategory || '',
+                serviceId: prod.serviceId?._id || prod.serviceId || '',
                 brand: prod.brand || '',
                 model: prod.model || '',
                 weight: prod.weight ?? '',
@@ -309,6 +312,7 @@ const ProductFormInner = ({ productId: propProductId }: { productId?: string }) 
         try {
             const payload = { ...formData };
             if (!payload.subCategory) delete payload.subCategory;
+            if (!payload.serviceId) delete payload.serviceId;
 
             // ── Convert raw string numeric fields → Number (no NaN leaks into payload) ──
             // Required number (price): empty → 0 (validation already guards > 0).
@@ -393,17 +397,17 @@ const ProductFormInner = ({ productId: propProductId }: { productId?: string }) 
     return (
         <div className="max-w-7xl mx-auto space-y-6 pb-32">
             {/* ══ ACTION BAR ═══════════════════════════════════════════ */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-md border border-gray-200 shadow-sm sticky top-0 z-40">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-md border border-gray-200 sticky top-0 z-40">
                 <div className="flex items-center gap-4">
-                    <Link href={listHref} className="w-10 h-10 flex items-center justify-center bg-gray-50 rounded-md border border-gray-200 hover:bg-gray-100 text-gray-400 transition-all hover:text-gray-600">
-                        <LuArrowLeft size={20} />
+                    <Link href={listHref} className="w-9 h-9 flex items-center justify-center bg-gray-50 rounded-md border border-gray-200 hover:bg-gray-100 text-gray-400 transition-all hover:text-gray-600">
+                        <LuArrowLeft size={18} />
                     </Link>
                     <div>
-                        <h1 className="text-xl font-bold text-gray-800">{isEditing ? 'Edit Product' : 'Create New Product'}</h1>
+                        <h1 className="text-lg font-semibold text-gray-800">{isEditing ? 'Edit Product' : 'Create New Product'}</h1>
                         <div className="flex items-center gap-2 mt-0.5">
                             <span className={`w-2 h-2 rounded-full ${formData.status === 'active' ? 'bg-green-500' : formData.status === 'draft' ? 'bg-yellow-500' : 'bg-red-500'}`}></span>
-                            <p className="text-xs text-gray-500 capitalize">{formData.status}</p>
-                            {formData.discount > 0 && <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-bold">{formData.discount}% OFF</span>}
+                            <p className="text-[11px] text-gray-500 capitalize">{formData.status}</p>
+                            {formData.discount > 0 && <span className="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-bold">{formData.discount}% OFF</span>}
                         </div>
                     </div>
                 </div>
@@ -435,16 +439,16 @@ const ProductFormInner = ({ productId: propProductId }: { productId?: string }) 
                     )}
 
                     {/* ── 1. Basic Information ──────────────────────── */}
-                    <div className="bg-white p-6 rounded-md border border-gray-200 shadow-sm space-y-5">
+                    <div className="bg-white p-5 rounded-md border border-gray-200 space-y-5">
                         <SectionHeader icon={<LuInfo size={20} />} title="Basic Information" color="bg-blue-50 text-blue-600" />
 
                         <Input label="Product Name" name="name" required type="text" placeholder="e.g. Motul 10W-40 Engine Oil 1L / Yamaha FZ Air Filter" value={formData.name} onChange={handleChange} error={errors.name} />
 
-                        {/* ── Category + Sub-Category (cascade) ── */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* ── Category + Sub-Category + Service ── */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div className="space-y-1.5" data-field="category">
-                                <label className="text-sm font-semibold text-gray-700">Category <span className="text-red-400">*</span></label>
-                                <select name="category" required className={`w-full px-4 py-2.5 bg-white border rounded-md text-sm font-semibold outline-none cursor-pointer ${errors.category ? 'border-red-400 bg-red-50/30' : 'border-gray-200 focus:border-[var(--color-primary)]'}`}
+                                <label className="text-[13px] font-medium text-gray-700">Category <span className="text-red-400">*</span></label>
+                                <select name="category" required className={`w-full px-3.5 py-2.5 bg-white border rounded-md text-sm outline-none cursor-pointer ${errors.category ? 'border-red-400 bg-red-50/30' : 'border-gray-200 focus:border-[var(--color-primary)]'}`}
                                     value={formData.category}
                                     onChange={(e) => { clearError('category'); setFormData((prev: any) => ({ ...prev, category: e.target.value, subCategory: '' })); }}>
                                     <option value="">Select Category</option>
@@ -456,8 +460,8 @@ const ProductFormInner = ({ productId: propProductId }: { productId?: string }) 
                                 with sub-categories is selected, so the field is visible but only
                                 interactive when there's something to pick. */}
                             <div className="space-y-1.5" data-field="subCategory">
-                                <label className="text-sm font-semibold text-gray-700">Sub-Category <span className="text-xs text-gray-400">(optional)</span></label>
-                                <select name="subCategory" disabled={!formData.category || subCategories.length === 0} className={`w-full px-4 py-2.5 bg-white border rounded-md text-sm font-semibold outline-none cursor-pointer disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed ${errors.subCategory ? 'border-red-400 bg-red-50/30' : 'border-gray-200 focus:border-[var(--color-primary)]'}`} value={formData.subCategory} onChange={handleChange}>
+                                <label className="text-[13px] font-medium text-gray-700">Sub-Category <span className="text-xs text-gray-400">(optional)</span></label>
+                                <select name="subCategory" disabled={!formData.category || subCategories.length === 0} className={`w-full px-3.5 py-2.5 bg-white border rounded-md text-sm outline-none cursor-pointer disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed ${errors.subCategory ? 'border-red-400 bg-red-50/30' : 'border-gray-200 focus:border-[var(--color-primary)]'}`} value={formData.subCategory} onChange={handleChange}>
                                     <option value="">
                                         {!formData.category
                                             ? 'Select a category first'
@@ -468,6 +472,15 @@ const ProductFormInner = ({ productId: propProductId }: { productId?: string }) 
                                     {subCategories.map((sub: any) => (<option key={sub._id} value={sub._id}>{sub.name}</option>))}
                                 </select>
                                 {errors.subCategory && <p className="text-xs text-red-500 font-medium">⚠ {errors.subCategory}</p>}
+                            </div>
+                            <div className="space-y-1.5" data-field="serviceId">
+                                <label className="text-[13px] font-medium text-gray-700">Linked Service <span className="text-xs text-gray-400">(optional)</span></label>
+                                <select name="serviceId" className={`w-full px-3.5 py-2.5 bg-white border rounded-md text-sm outline-none cursor-pointer ${errors.serviceId ? 'border-red-400 bg-red-50/30' : 'border-gray-200 focus:border-[var(--color-primary)]'}`}
+                                    value={formData.serviceId}
+                                    onChange={(e) => { clearError('serviceId'); setFormData((prev: any) => ({ ...prev, serviceId: e.target.value })); }}>
+                                    <option value="">Select Service (None)</option>
+                                    {(servicesData?.data || []).map((srv: any) => (<option key={srv._id} value={srv._id}>{srv.title}</option>))}
+                                </select>
                             </div>
                         </div>
 
@@ -484,7 +497,7 @@ const ProductFormInner = ({ productId: propProductId }: { productId?: string }) 
 
                         {/* ── Box Size (L × W × H) ── */}
                         <div className="space-y-1.5">
-                            <label className="text-sm font-semibold text-gray-700">Box Size (L × W × H, cm) <span className="text-xs text-gray-400">(optional — used for courier)</span></label>
+                            <label className="text-[13px] font-medium text-gray-700">Box Size (L × W × H, cm) <span className="text-xs text-gray-400">(optional — used for courier)</span></label>
                             <div className="grid grid-cols-3 gap-3">
                                 <Input label="Length" name="dimensions.length" type="number" placeholder="0" value={formData.dimensions.length} onChange={handleChange} />
                                 <Input label="Width" name="dimensions.width" type="number" placeholder="0" value={formData.dimensions.width} onChange={handleChange} />
@@ -493,27 +506,27 @@ const ProductFormInner = ({ productId: propProductId }: { productId?: string }) 
                         </div>
 
                         <div className="space-y-1.5" data-field="insideTheBox">
-                            <label className="text-sm font-semibold text-gray-700">Inside The Box <span className="text-xs text-gray-400">(optional)</span></label>
-                            <textarea name="insideTheBox" rows={3} placeholder="e.g. 1x Air Filter, 1x Mounting Gasket, 1x Manual" className={`w-full px-4 py-3 bg-white border rounded-md outline-none transition-all text-sm ${errors.insideTheBox ? 'border-red-400 bg-red-50/30 focus:border-red-500' : 'border-gray-200 focus:border-[var(--color-primary)]'}`} value={formData.insideTheBox} onChange={handleChange}></textarea>
+                            <label className="text-[13px] font-medium text-gray-700">Inside The Box <span className="text-xs text-gray-400">(optional)</span></label>
+                            <textarea name="insideTheBox" rows={3} placeholder="e.g. 1x Air Filter, 1x Mounting Gasket, 1x Manual" className={`w-full px-3.5 py-2.5 bg-white border rounded-md outline-none transition-all text-sm ${errors.insideTheBox ? 'border-red-400 bg-red-50/30 focus:border-red-500' : 'border-gray-200 focus:border-[var(--color-primary)]'}`} value={formData.insideTheBox} onChange={handleChange}></textarea>
                             {errors.insideTheBox && <p className="text-xs text-red-500 font-medium">⚠ {errors.insideTheBox}</p>}
                         </div>
 
                         {/* ── Compatibility / Fits which models (key trust field for parts) ── */}
                         <div className="space-y-1.5">
-                            <label className="text-sm font-semibold text-gray-700">
-                                Compatibility <span className="text-gray-500">— works with which models / devices</span>
+                            <label className="text-[13px] font-medium text-gray-700">
+                                Compatibility <span className="text-gray-500 font-normal">— works with which models / devices</span>
                                 <span className="text-xs text-gray-400 font-normal"> (recommended, builds buyer trust)</span>
                             </label>
-                            <textarea name="compatibility" rows={2} placeholder="e.g. Compatible with specific models, sizes, or devices. Helps buyers pick the right item." className="w-full px-4 py-3 bg-white border border-gray-200 rounded-md outline-none focus:border-[var(--color-primary)] transition-all text-sm" value={formData.compatibility} onChange={handleChange}></textarea>
+                            <textarea name="compatibility" rows={2} placeholder="e.g. Compatible with specific models, sizes, or devices. Helps buyers pick the right item." className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-md outline-none focus:border-[var(--color-primary)] transition-all text-sm" value={formData.compatibility} onChange={handleChange}></textarea>
                         </div>
 
-                        <div className="space-y-2">
-                            <label className="text-sm font-semibold text-gray-700">Tagline <span className="text-xs text-gray-400">(scrolling text on card)</span></label>
-                            <input type="text" name="tagline" placeholder="Lower price than others but quality higher" className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-md outline-none focus:border-[var(--color-primary)] transition-all text-sm" value={formData.tagline} onChange={handleChange} />
+                        <div className="space-y-1.5">
+                            <label className="text-[13px] font-medium text-gray-700">Tagline <span className="text-xs text-gray-400 font-normal">(scrolling text on card)</span></label>
+                            <input type="text" name="tagline" placeholder="Lower price than others but quality higher" className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-md outline-none focus:border-[var(--color-primary)] transition-all text-sm" value={formData.tagline} onChange={handleChange} />
                         </div>
 
                         <div className="space-y-1.5" data-field="description">
-                            <label className="text-sm font-semibold text-gray-700">Product Description <span className="text-red-400">*</span></label>
+                            <label className="text-[13px] font-medium text-gray-700">Product Description <span className="text-red-400">*</span></label>
                             <div className={`product-editor-wrapper ${errors.description ? 'ring-1 ring-red-400 rounded-md' : ''}`}>
                                 <ReactQuill
                                     theme="snow"
@@ -543,29 +556,29 @@ const ProductFormInner = ({ productId: propProductId }: { productId?: string }) 
                     </div>
 
                     {/* ── 2. Pricing & Inventory ────────────────────── */}
-                    <div className="bg-white p-6 rounded-md border border-gray-200 shadow-sm space-y-5">
+                    <div className="bg-white p-5 rounded-md border border-gray-200 space-y-5">
                         <SectionHeader icon={<LuDollarSign size={20} />} title="Pricing & Inventory" color="bg-green-50 text-green-600" />
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div className="space-y-1.5" data-field="price">
-                                <label className="text-sm font-semibold text-gray-700">Offer Price <span className="text-red-400">*</span></label>
+                                <label className="text-[13px] font-medium text-gray-700">Offer Price <span className="text-red-400">*</span></label>
                                 <div className="relative">
-                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">৳</span>
-                                    <input type="number" name="price" placeholder="0" className={`w-full pl-8 pr-3 py-2.5 bg-white border rounded-md outline-none text-base font-bold ${errors.price ? 'border-red-400 bg-red-50/30' : 'border-gray-200 focus:border-[var(--color-primary)]'}`} value={formData.price} onChange={handleChange} />
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-sm">৳</span>
+                                    <input type="number" name="price" placeholder="0" className={`w-full pl-8 pr-3 py-2.5 bg-white border rounded-md outline-none text-base font-semibold ${errors.price ? 'border-red-400 bg-red-50/30' : 'border-gray-200 focus:border-[var(--color-primary)]'}`} value={formData.price} onChange={handleChange} />
                                 </div>
                                 {errors.price && <p className="text-xs text-red-500 font-medium">⚠ {errors.price}</p>}
                             </div>
                             <div className="space-y-2" data-field="originalPrice">
-                                <label className="text-sm font-semibold text-gray-700">Original Price</label>
+                                <label className="text-[13px] font-medium text-gray-700">Original Price</label>
                                 <div className="relative">
-                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">৳</span>
-                                    <input type="number" name="originalPrice" placeholder="0" className={`w-full pl-8 pr-3 py-2.5 bg-white border rounded-md outline-none text-base font-bold text-red-600 ${errors.originalPrice ? 'border-red-400 bg-red-50/30' : 'border-gray-200 focus:border-[var(--color-primary)]'}`} value={formData.originalPrice} onChange={handleChange} />
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-sm">৳</span>
+                                    <input type="number" name="originalPrice" placeholder="0" className={`w-full pl-8 pr-3 py-2.5 bg-white border rounded-md outline-none text-base font-semibold text-red-600 ${errors.originalPrice ? 'border-red-400 bg-red-50/30' : 'border-gray-200 focus:border-[var(--color-primary)]'}`} value={formData.originalPrice} onChange={handleChange} />
                                 </div>
                                 {errors.originalPrice && <p className="text-xs text-red-500 font-medium">⚠ {errors.originalPrice}</p>}
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-semibold text-gray-700 flex items-center gap-1"><LuPercent size={14} /> Discount</label>
-                                <input type="number" name="discount" placeholder="Auto" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-md outline-none text-base font-bold text-[var(--color-primary)]" value={formData.discount} readOnly />
+                                <label className="text-[13px] font-medium text-gray-700 flex items-center gap-1"><LuPercent size={14} /> Discount</label>
+                                <input type="number" name="discount" placeholder="Auto" className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-md outline-none text-base font-semibold text-[var(--color-primary)]" value={formData.discount} readOnly />
                             </div>
                         </div>
 
@@ -579,8 +592,8 @@ const ProductFormInner = ({ productId: propProductId }: { productId?: string }) 
                             <Input label="Current Stock" name="stock" type="number" placeholder="0" value={formData.stock} onChange={handleChange} error={errors.stock} />
                             <Input label="Low Stock Alert" name="lowStockThreshold" type="number" placeholder="5" value={formData.lowStockThreshold} onChange={handleChange} />
                             <div className="space-y-2">
-                                <label className="text-sm font-semibold text-gray-700">Unit</label>
-                                <select name="unit" className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-md text-sm outline-none focus:border-[var(--color-primary)] cursor-pointer" value={formData.unit} onChange={handleChange}>
+                                <label className="text-[13px] font-medium text-gray-700">Unit</label>
+                                <select name="unit" className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-md text-sm outline-none focus:border-[var(--color-primary)] cursor-pointer" value={formData.unit} onChange={handleChange}>
                                     <optgroup label="Count">
                                         <option value="piece">Piece</option>
                                         <option value="pair">Pair</option>
@@ -616,7 +629,7 @@ const ProductFormInner = ({ productId: propProductId }: { productId?: string }) 
                     </div>
 
                     {/* ── 3. Product Type & Variations ─ */}
-                    <div className="bg-white p-6 rounded-md border border-gray-200 shadow-sm space-y-5">
+                    <div className="bg-white p-5 rounded-md border border-gray-200 space-y-5">
                         <SectionHeader icon={<LuDroplet size={20} />} title="Product Type & Variations" color="bg-pink-50 text-pink-600" />
 
                         {/* ── Product Type Selector ── */}
@@ -628,13 +641,13 @@ const ProductFormInner = ({ productId: propProductId }: { productId?: string }) 
                             ].map((t) => (
                                 <button key={t.value} type="button"
                                     onClick={() => setFormData((prev: any) => ({ ...prev, productType: t.value }))}
-                                    className={`p-4 rounded-lg border-2 text-left transition-all ${
+                                    className={`p-3.5 rounded-lg border text-left transition-all ${
                                         formData.productType === t.value
-                                            ? 'border-[var(--color-primary)] bg-green-50 shadow-md'
+                                            ? 'border-[var(--color-primary)] bg-green-50 shadow-sm'
                                             : 'border-gray-200 bg-white hover:border-gray-300'
                                     }`}
                                 >
-                                    <p className="text-sm font-bold text-gray-800">{t.label}</p>
+                                    <p className="text-[13px] font-semibold text-gray-800">{t.label}</p>
                                     <p className="text-[11px] text-gray-500 mt-0.5">{t.desc}</p>
                                 </button>
                             ))}
@@ -655,11 +668,11 @@ const ProductFormInner = ({ productId: propProductId }: { productId?: string }) 
                         {/* ── Step 1: Colors (variable + multi-color) ── */}
                         {(formData.productType === 'variable' || formData.productType === 'multi-color') && (
                         <div className="space-y-3">
-                            <label className="text-sm font-bold text-gray-700 flex items-center gap-2">🎨 Colors</label>
+                            <label className="text-[13px] font-medium text-gray-700 flex items-center gap-2">🎨 Colors</label>
                             <div className="flex flex-wrap gap-2">
                                 {formData.colors.map((c: string, i: number) => (
-                                    <span key={i} className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-sm font-semibold">
-                                        <span className="w-5 h-5 rounded" style={{ background: formData.colorHex?.[i] || '#ccc', border: '1px solid #ddd' }} />
+                                    <span key={i} className="flex items-center gap-2 bg-white border border-gray-200 rounded-md px-3 py-1.5 text-sm font-medium">
+                                        <span className="w-4 h-4 rounded" style={{ background: formData.colorHex?.[i] || '#ccc', border: '1px solid #ddd' }} />
                                         {c}
                                         <button type="button" onClick={() => {
                                             setFormData((prev: any) => ({
@@ -672,8 +685,8 @@ const ProductFormInner = ({ productId: propProductId }: { productId?: string }) 
                                 ))}
                             </div>
                             <div className="flex gap-2 items-center">
-                                <input type="color" id="varColorHex" defaultValue="#000000" className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer p-0.5 shrink-0" />
-                                <input type="text" id="varColorName" placeholder="Color নাম (e.g. Sky Blue)" className="flex-1 px-4 py-2.5 bg-white border border-gray-200 rounded-md text-sm outline-none focus:border-[var(--color-primary)]"
+                                <input type="color" id="varColorHex" defaultValue="#000000" className="w-10 h-10 rounded-md border border-gray-200 cursor-pointer p-0.5 shrink-0" />
+                                <input type="text" id="varColorName" placeholder="Color নাম (e.g. Sky Blue)" className="flex-1 px-3.5 py-2.5 bg-white border border-gray-200 rounded-md text-sm outline-none focus:border-[var(--color-primary)]"
                                     onKeyDown={(e) => {
                                         if (e.key === 'Enter') {
                                             e.preventDefault();
@@ -701,7 +714,7 @@ const ProductFormInner = ({ productId: propProductId }: { productId?: string }) 
                                         colorHex: [...prev.colorHex, hexEl.value],
                                     }));
                                     nameEl.value = '';
-                                }} className="px-4 py-2.5 bg-[var(--color-primary)] text-white rounded-md text-sm font-bold hover:bg-[var(--color-primary-dark)] shrink-0">+ Add</button>
+                                }} className="px-4 py-2.5 bg-[var(--color-primary)] text-white rounded-md text-sm font-semibold hover:bg-[var(--color-primary-dark)] shrink-0">+ Add</button>
                             </div>
                         </div>
                         )}
@@ -709,10 +722,10 @@ const ProductFormInner = ({ productId: propProductId }: { productId?: string }) 
                         {/* ── Step 2: Sizes (variable only) ── */}
                         {formData.productType === 'variable' && (
                         <div className="space-y-3">
-                            <label className="text-sm font-bold text-gray-700 flex items-center gap-2">📐 Sizes</label>
+                            <label className="text-[13px] font-medium text-gray-700 flex items-center gap-2">📐 Sizes</label>
                             <div className="flex flex-wrap gap-2">
                                 {formData.sizes.map((s: string, i: number) => (
-                                    <span key={i} className="flex items-center gap-1.5 bg-gray-100 border border-gray-200 rounded-lg px-3 py-1.5 text-sm font-bold">
+                                    <span key={i} className="flex items-center gap-1.5 bg-gray-100 border border-gray-200 rounded-md px-3 py-1 text-sm font-medium">
                                         {s}
                                         <button type="button" onClick={() => {
                                             setFormData((prev: any) => ({ ...prev, sizes: prev.sizes.filter((_: any, j: number) => j !== i) }));
@@ -721,7 +734,7 @@ const ProductFormInner = ({ productId: propProductId }: { productId?: string }) 
                                 ))}
                             </div>
                             <div className="flex gap-2">
-                                <input type="text" id="varSizeName" placeholder="S, M, L, XL, XXL, Free Size..." className="flex-1 px-4 py-2.5 bg-white border border-gray-200 rounded-md text-sm outline-none focus:border-[var(--color-primary)]"
+                                <input type="text" id="varSizeName" placeholder="S, M, L, XL, XXL, Free Size..." className="flex-1 px-3.5 py-2.5 bg-white border border-gray-200 rounded-md text-sm outline-none focus:border-[var(--color-primary)]"
                                     onKeyDown={(e) => {
                                         if (e.key === 'Enter') {
                                             e.preventDefault();
@@ -740,9 +753,9 @@ const ProductFormInner = ({ productId: propProductId }: { productId?: string }) 
                                     if (val && !formData.sizes.includes(val)) {
                                         setFormData((prev: any) => ({ ...prev, sizes: [...prev.sizes, val] }));
                                     }
-                                    el.value = '';
-                                }} className="px-4 py-2.5 bg-[var(--color-primary)] text-white rounded-md text-sm font-bold hover:bg-[var(--color-primary-dark)] shrink-0">+ Add</button>
-                            </div>
+                                     el.value = '';
+                                 }} className="px-4 py-2.5 bg-[var(--color-primary)] text-white rounded-md text-sm font-semibold hover:bg-[var(--color-primary-dark)] shrink-0">+ Add</button>
+                             </div>
                         </div>
                         )}
 
@@ -934,12 +947,12 @@ const ProductFormInner = ({ productId: propProductId }: { productId?: string }) 
 
 
                     {/* ── 6. Specifications & Highlights ─────────────── */}
-                    <div className="bg-white p-6 rounded-md border border-gray-200 shadow-sm space-y-5">
+                    <div className="bg-white p-5 rounded-md border border-gray-200 space-y-5">
                         <SectionHeader icon={<LuInfo size={20} />} title="Specifications & Highlights" color="bg-indigo-50 text-indigo-600" />
 
                         {/* Highlights — bullet key selling points */}
                         <div className="space-y-2">
-                            <label className="text-sm font-semibold text-gray-700">Highlights <span className="text-xs text-gray-400">(key selling points, shown as bullets on the product page)</span></label>
+                            <label className="text-[13px] font-medium text-gray-700">Highlights <span className="text-xs text-gray-400 font-normal">(key selling points, shown as bullets on the product page)</span></label>
                             {formData.highlights.map((h: string, i: number) => (
                                 <div key={i} className="flex gap-2">
                                     <input
@@ -956,12 +969,12 @@ const ProductFormInner = ({ productId: propProductId }: { productId?: string }) 
                                 </div>
                             ))}
                             <button type="button" onClick={() => setFormData((prev: any) => ({ ...prev, highlights: [...prev.highlights, ''] }))}
-                                className="text-sm font-semibold text-[var(--color-primary)] hover:underline">+ Add highlight</button>
+                                className="text-[13px] font-medium text-[var(--color-primary)] hover:underline">+ Add highlight</button>
                         </div>
 
                         {/* Specifications — key/value table */}
                         <div className="space-y-2 pt-4 border-t border-gray-100">
-                            <label className="text-sm font-semibold text-gray-700">Specifications <span className="text-xs text-gray-400">(key–value table, e.g. Material → Cotton)</span></label>
+                            <label className="text-[13px] font-medium text-gray-700">Specifications <span className="text-xs text-gray-400 font-normal">(key–value table, e.g. Material → Cotton)</span></label>
                             {formData.specifications.map((sp: any, i: number) => (
                                 <div key={i} className="flex gap-2">
                                     <input
@@ -985,21 +998,21 @@ const ProductFormInner = ({ productId: propProductId }: { productId?: string }) 
                                 </div>
                             ))}
                             <button type="button" onClick={() => setFormData((prev: any) => ({ ...prev, specifications: [...prev.specifications, { key: '', value: '' }] }))}
-                                className="text-sm font-semibold text-[var(--color-primary)] hover:underline">+ Add specification</button>
+                                className="text-[13px] font-medium text-[var(--color-primary)] hover:underline">+ Add specification</button>
                         </div>
                     </div>
 
                     {/* ── 7. SEO ─────────────────────────────────────── */}
-                    <div className="bg-white p-6 rounded-md border border-gray-200 shadow-sm space-y-5">
+                    <div className="bg-white p-5 rounded-md border border-gray-200 space-y-5">
                         <SectionHeader icon={<LuGlobe size={20} />} title="SEO Optimization" color="bg-[var(--color-primary-lightest)] text-[var(--color-primary)]" />
                         <Input label="Meta Title" name="metaTitle" type="text" placeholder="SEO title for search engines" value={formData.metaTitle} onChange={handleChange} />
                         <div className="space-y-2">
-                            <label className="text-sm font-semibold text-gray-700">Meta Description</label>
-                            <textarea name="metaDescription" rows={3} placeholder="SEO description for better search ranking..." className="w-full px-4 py-3 bg-white border border-gray-200 rounded-md outline-none focus:border-[var(--color-primary-border)] transition-all text-sm" value={formData.metaDescription} onChange={handleChange}></textarea>
+                            <label className="text-[13px] font-medium text-gray-700">Meta Description</label>
+                            <textarea name="metaDescription" rows={3} placeholder="SEO description for better search ranking..." className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-md outline-none focus:border-[var(--color-primary-border)] transition-all text-sm" value={formData.metaDescription} onChange={handleChange}></textarea>
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-semibold text-gray-700">Meta Keywords <span className="text-xs text-gray-400">(comma-separated)</span></label>
-                            <input type="text" placeholder="e.g. air compressor, industrial" className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-md text-sm outline-none focus:border-[var(--color-primary-border)]" value={formData.metaKeywords.join(', ')} onChange={(e) => handleArrayChange('metaKeywords', e.target.value)} />
+                            <label className="text-[13px] font-medium text-gray-700">Meta Keywords <span className="text-xs text-gray-400 font-normal">(comma-separated)</span></label>
+                            <input type="text" placeholder="e.g. air compressor, industrial" className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-md text-sm outline-none focus:border-[var(--color-primary-border)]" value={formData.metaKeywords.join(', ')} onChange={(e) => handleArrayChange('metaKeywords', e.target.value)} />
                         </div>
                     </div>
                 </div>
@@ -1008,8 +1021,8 @@ const ProductFormInner = ({ productId: propProductId }: { productId?: string }) 
                 <div className="lg:col-span-4 space-y-6">
 
                     {/* ── Media Assets ──────────────────────────────── */}
-                    <div className={`bg-white p-6 rounded-md border shadow-sm space-y-4 ${(errors.thumbnail || errors.images) ? 'border-red-300 ring-1 ring-red-200' : 'border-gray-200'}`} data-field="thumbnail">
-                        <h3 className="font-bold text-gray-800 flex items-center gap-2"><LuImage className="text-blue-500" /> Media Assets</h3>
+                    <div className={`bg-white p-5 rounded-md border space-y-4 ${(errors.thumbnail || errors.images) ? 'border-red-300 ring-1 ring-red-200' : 'border-gray-200'}`} data-field="thumbnail">
+                        <h3 className="font-semibold text-gray-800 flex items-center gap-2"><LuImage className="text-blue-500" /> Media Assets</h3>
                         <p className="text-[11px] text-gray-400 -mt-2">At least 3 images required (1 thumbnail + 2 gallery)</p>
                         <SingleImageUploader
                             label="Product Thumbnail"
@@ -1030,12 +1043,12 @@ const ProductFormInner = ({ productId: propProductId }: { productId?: string }) 
                     </div>
 
                     {/* ── Category & Tags ───────────────────────────── */}
-                    <div className="bg-white p-6 rounded-md border border-gray-200 shadow-sm space-y-4">
-                        <h3 className="font-bold text-gray-800 flex items-center gap-2"><LuTag className="text-indigo-500" /> Organization</h3>
+                    <div className="bg-white p-5 rounded-md border border-gray-200 space-y-4">
+                        <h3 className="font-semibold text-gray-800 flex items-center gap-2"><LuTag className="text-indigo-500" /> Organization</h3>
                         {/* Category & Sub-Category moved to the Basic Information card (under Product Name). */}
                         <div className="space-y-2">
-                            <label className="text-xs font-bold text-gray-400 uppercase">Tags <span className="text-gray-300">(comma-separated)</span></label>
-                            <input type="text" placeholder="e.g. air compressor, industrial, factory" className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-md text-xs outline-none focus:border-indigo-400" value={formData.tags.join(', ')} onChange={(e) => handleArrayChange('tags', e.target.value)} />
+                            <label className="text-[11px] font-semibold text-gray-500 uppercase">Tags <span className="text-gray-400 font-normal">(comma-separated)</span></label>
+                            <input type="text" placeholder="e.g. air compressor, industrial, factory" className="w-full px-3.5 py-2 bg-white border border-gray-200 rounded-md text-[13px] outline-none focus:border-indigo-400" value={formData.tags.join(', ')} onChange={(e) => handleArrayChange('tags', e.target.value)} />
                             {formData.tags.length > 0 && (
                                 <div className="flex flex-wrap gap-1">
                                     {formData.tags.slice(0, 8).map((t: string, i: number) => (
@@ -1046,14 +1059,14 @@ const ProductFormInner = ({ productId: propProductId }: { productId?: string }) 
                             )}
                         </div>
                         <div className="space-y-2">
-                            <label className="text-xs font-bold text-gray-400 uppercase">AI Labels <span className="text-gray-300">(for image search)</span></label>
-                            <input type="text" placeholder="e.g. machinery, compressor" className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-md text-xs outline-none focus:border-indigo-400" value={formData.aiLabels.join(', ')} onChange={(e) => handleArrayChange('aiLabels', e.target.value)} />
+                            <label className="text-[11px] font-semibold text-gray-500 uppercase">AI Labels <span className="text-gray-400 font-normal">(for image search)</span></label>
+                            <input type="text" placeholder="e.g. machinery, compressor" className="w-full px-3.5 py-2 bg-white border border-gray-200 rounded-md text-[13px] outline-none focus:border-indigo-400" value={formData.aiLabels.join(', ')} onChange={(e) => handleArrayChange('aiLabels', e.target.value)} />
                         </div>
                     </div>
 
                     {/* ── Visibility & Promotion ────────────────────── */}
-                    <div className="bg-white p-6 rounded-md border border-gray-200 shadow-sm space-y-4">
-                        <h3 className="font-bold text-gray-800 flex items-center gap-2"><LuSettings className="text-[var(--color-primary)]" /> Visibility & Status</h3>
+                    <div className="bg-white p-5 rounded-md border border-gray-200 space-y-4">
+                        <h3 className="font-semibold text-gray-800 flex items-center gap-2"><LuSettings className="text-[var(--color-primary)]" /> Visibility & Status</h3>
                         <div className="space-y-2">
                             <Toggle label="Featured Product" name="isFeatured" checked={formData.isFeatured} onChange={handleChange} color="bg-yellow-500" />
                             <Toggle label="On Sale" name="isOnSale" checked={formData.isOnSale} onChange={handleChange} color="bg-rose-500" />
@@ -1061,11 +1074,11 @@ const ProductFormInner = ({ productId: propProductId }: { productId?: string }) 
                             <Toggle label="Top Selling (হোম পেজে দেখাবে)" name="isBestSelling" checked={formData.isBestSelling} onChange={handleChange} color="bg-orange-500" />
                         </div>
                         <div className="pt-2">
-                            <label className="text-xs font-bold text-gray-400 uppercase block mb-2">Status</label>
+                            <label className="text-[11px] font-semibold text-gray-500 uppercase block mb-2">Status</label>
                             <div className="grid grid-cols-3 gap-1.5">
                                 {['active', 'draft', 'out-of-stock'].map(s => (
                                     <button key={s} type="button" onClick={() => setFormData((prev: any) => ({ ...prev, status: s }))}
-                                        className={`py-2 rounded-md text-xs font-bold uppercase transition-all ${formData.status === s ? 'bg-[var(--color-primary)] text-white shadow-md' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}`}>
+                                        className={`py-2 rounded-md text-xs font-semibold uppercase transition-all ${formData.status === s ? 'bg-[var(--color-primary)] text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
                                         {s === 'out-of-stock' ? 'Out' : s}
                                     </button>
                                 ))}
@@ -1074,16 +1087,16 @@ const ProductFormInner = ({ productId: propProductId }: { productId?: string }) 
                     </div>
 
                     {/* ── Shipping & Warranty ───────────────────────── */}
-                    <div className="bg-white p-6 rounded-md border border-gray-200 shadow-sm space-y-4">
-                        <h3 className="font-bold text-gray-800 flex items-center gap-2"><LuShield className="text-emerald-500" /> Shipping, Payment & Warranty</h3>
+                    <div className="bg-white p-5 rounded-md border border-gray-200 space-y-4">
+                        <h3 className="font-semibold text-gray-800 flex items-center gap-2"><LuShield className="text-emerald-500" /> Shipping, Payment & Warranty</h3>
 
                         {/* Cash on Delivery — used by courier + payment flow */}
                         <Toggle label="Cash on Delivery (COD) available" name="codAvailable" checked={formData.codAvailable} onChange={handleChange} color="bg-emerald-500" />
 
                         <div className="space-y-3 p-4 bg-gray-50 rounded-md border border-gray-100">
                             <label className="flex items-center gap-3 cursor-pointer">
-                                <input type="checkbox" name="shippingConfig.freeShipping" className="w-4 h-4 accent-emerald-500" checked={formData.shippingConfig.freeShipping} onChange={handleChange} />
-                                <span className="text-sm font-bold text-gray-700">Free Shipping</span>
+                                <input type="checkbox" name="shippingConfig.freeShipping" className="w-4 h-4 accent-emerald-500 rounded" checked={formData.shippingConfig.freeShipping} onChange={handleChange} />
+                                <span className="text-[13px] font-medium text-gray-700">Free Shipping</span>
                             </label>
                             {!formData.shippingConfig.freeShipping && (
                                 <div className="grid grid-cols-2 gap-3 pt-1">
@@ -1101,8 +1114,8 @@ const ProductFormInner = ({ productId: propProductId }: { productId?: string }) 
 
                         <div className="space-y-3 p-4 bg-gray-50 rounded-md border border-gray-100">
                             <label className="flex items-center gap-3 cursor-pointer">
-                                <input type="checkbox" name="warranty.hasWarranty" className="w-4 h-4 accent-[var(--color-primary)]" checked={formData.warranty.hasWarranty} onChange={handleChange} />
-                                <span className="text-sm font-bold text-gray-700">Has Warranty</span>
+                                <input type="checkbox" name="warranty.hasWarranty" className="w-4 h-4 accent-[var(--color-primary)] rounded" checked={formData.warranty.hasWarranty} onChange={handleChange} />
+                                <span className="text-[13px] font-medium text-gray-700">Has Warranty</span>
                             </label>
                             {formData.warranty.hasWarranty && (
                                 <div className="grid grid-cols-3 gap-2 pt-1">

@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import {
     LuLayoutDashboard, LuPackage, LuShoppingBag, LuBuilding2, LuTags,
-    LuLogIn, LuCircleAlert,
+    LuLogIn, LuCircleAlert, LuWrench,
 } from 'react-icons/lu';
 import { useAppSelector } from '@/redux';
 import { useGetMyCompanyQuery } from '@/redux/api/companyApi';
@@ -14,6 +14,7 @@ const NAV: PartnerNavItem[] = [
     { name: 'Overview', href: '/dashboard/company', icon: LuLayoutDashboard, exact: true },
     { name: 'Products', href: '/dashboard/company/products', icon: LuPackage },
     { name: 'Categories', href: '/dashboard/company/categories', icon: LuTags },
+    { name: 'Services', href: '/dashboard/company/services', icon: LuWrench },
     { name: 'Orders', href: '/dashboard/company/orders', icon: LuShoppingBag },
     { name: 'Profile', href: '/dashboard/company/profile', icon: LuBuilding2 },
 ];
