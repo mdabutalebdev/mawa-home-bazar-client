@@ -16,6 +16,7 @@ import ServicesSection from './ServicesSection';
 import FeaturesSection from './FeaturesSection';
 import CategoryShowcaseSection from './CategoryShowcaseSection';
 import ServiceCompaniesSection from './ServiceCompaniesSection';
+import ProductCompaniesSection from './ProductCompaniesSection';
 import HowItWorksSection from './HowItWorksSection';
 import ExperienceSection from './ExperienceSection';
 
@@ -54,6 +55,8 @@ const NewHomePage: React.FC = () => {
             {/* Company services — partner/service-provider logo cards. Sits
                 directly under "Our Services" (admin-managed). */}
             <ServiceCompaniesSection />
+            {/* Product companies — category style cards for manufacturing/import companies. */}
+            <ProductCompaniesSection />
             {/* Highlight stats (admin-managed). */}
             <StatsBar />
             <CategoryExpertise />

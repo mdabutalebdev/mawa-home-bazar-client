@@ -43,7 +43,7 @@ export const baseApi = createApi({
         'Invoices', 'Returns', 'Notifications', 'Newsletter',
         // Marketplace (dealers / companies / retailers / chat / wallet / delivery)
         'Geo', 'Companies', 'Dealers', 'Retailers', 'Partners', 'Conversations', 'Messages',
-        'Wallet', 'Commissions', 'Delivery', 'MarketingReports', 'OrderRequests',
+        'Wallet', 'Commissions', 'Delivery', 'MarketingReports', 'OrderRequests', 'CompanyServices',
     ],
     endpoints: () => ({}),
 });

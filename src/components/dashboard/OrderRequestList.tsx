@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { LuInbox, LuPhone, LuMapPin, LuClock, LuUser, LuMessageSquare, LuStore } from 'react-icons/lu';
+import { LuInbox, LuPhone, LuMapPin, LuClock, LuUser, LuMessageSquare, LuStore, LuEye } from 'react-icons/lu';
 
 export interface OrderReq {
     _id: string;
@@ -38,6 +38,7 @@ interface Props {
     /** Admin view shows which dealer the request was routed to. */
     showDealer?: boolean;
     total?: number;
+    linkPrefix?: string;
 }
 
 const fmtDate = (d?: string) => {
@@ -46,7 +47,7 @@ const fmtDate = (d?: string) => {
     return dt.toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) + ', ' + dt.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 };
 
-const OrderRequestList: React.FC<Props> = ({ title, requests, isLoading, onUpdateStatus, statusFilter, setStatusFilter, showDealer, total }) => {
+const OrderRequestList: React.FC<Props> = ({ title, requests, isLoading, onUpdateStatus, statusFilter, setStatusFilter, showDealer, total, linkPrefix = '/dashboard/admin/order-requests' }) => {
     return (
         <div className="space-y-4">
             {/* Header */}
@@ -79,63 +80,66 @@ const OrderRequestList: React.FC<Props> = ({ title, requests, isLoading, onUpdat
             {isLoading ? (
                 <div className="py-16 text-center text-sm text-gray-400">Loading…</div>
             ) : requests.length === 0 ? (
-                <div className="py-16 text-center">
+                <div className="py-16 text-center bg-white rounded-xl border border-gray-100">
                     <LuInbox size={36} className="mx-auto text-gray-300" />
                     <p className="text-sm text-gray-400 mt-3">No requests {statusFilter ? `with status "${statusFilter}"` : 'yet'}.</p>
                 </div>
             ) : (
-                <div className="space-y-3">
-                    {requests.map((r) => {
-                        const area = [r.upazila?.name, r.district?.name].filter(Boolean).join(', ');
-                        return (
-                            <div key={r._id} className="bg-white rounded-xl border border-gray-100 p-4 sm:p-5">
-                                <div className="flex flex-wrap items-start justify-between gap-3">
-                                    <div className="min-w-0">
-                                        <div className="flex items-center gap-2 flex-wrap">
-                                            <span className="text-[11px] font-mono font-bold text-gray-400">{r.requestId}</span>
-                                            <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase border ${badgeCls(r.status)}`}>{r.status}</span>
-                                            <span className="text-[11px] text-gray-400 flex items-center gap-1"><LuClock size={11} /> {fmtDate(r.createdAt)}</span>
-                                        </div>
-                                        {r.serviceTitle && (
-                                            <p className="mt-1.5 text-sm font-extrabold text-gray-900">{r.serviceTitle}</p>
-                                        )}
-                                    </div>
-                                    <select
-                                        value={r.status}
-                                        onChange={(e) => onUpdateStatus(r._id, e.target.value)}
-                                        className="text-xs font-bold px-2.5 py-1.5 rounded-lg border border-gray-200 bg-white outline-none focus:border-[var(--color-primary)]"
-                                    >
-                                        {STATUSES.map((sx) => <option key={sx.key} value={sx.key}>{sx.label}</option>)}
-                                    </select>
-                                </div>
-
-                                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 text-[13px]">
-                                    <p className="flex items-center gap-2 text-gray-700"><LuUser size={14} className="text-gray-400" /> {r.name}</p>
-                                    <p className="flex items-center gap-2 text-gray-700">
-                                        <LuPhone size={14} className="text-gray-400" />
-                                        <a href={`tel:${r.phone}`} className="font-semibold text-[var(--color-primary)]">{r.phone}</a>
-                                    </p>
-                                    <p className="flex items-center gap-2 text-gray-700 sm:col-span-2">
-                                        <LuMapPin size={14} className="text-gray-400 shrink-0" />
-                                        <span>{area}{r.address ? ` — ${r.address}` : ''}</span>
-                                    </p>
-                                    {showDealer && (
-                                        <p className="flex items-center gap-2 text-gray-500 sm:col-span-2">
-                                            <LuStore size={14} className="text-gray-400 shrink-0" />
-                                            {r.dealer ? `Dealer: ${r.dealer.name}${r.dealer.level === 'district' ? ' (district)' : ''}` : 'No dealer for this area — admin handled'}
-                                        </p>
-                                    )}
-                                </div>
-
-                                {r.message && (
-                                    <div className="mt-3 flex items-start gap-2 rounded-lg bg-gray-50 px-3 py-2.5">
-                                        <LuMessageSquare size={14} className="text-gray-400 shrink-0 mt-0.5" />
-                                        <p className="text-[13px] text-gray-600 leading-relaxed whitespace-pre-line">{r.message}</p>
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    })}
+                <div className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="bg-gray-50/80 border-b border-gray-100">
+                                    <th className="px-4 py-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider">ID / Date</th>
+                                    <th className="px-4 py-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Customer</th>
+                                    <th className="px-4 py-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Service / Area</th>
+                                    <th className="px-4 py-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th className="px-4 py-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100 text-sm">
+                                {requests.map((r) => {
+                                    const area = [r.upazila?.name, r.district?.name].filter(Boolean).join(', ');
+                                    return (
+                                        <tr key={r._id} className="hover:bg-gray-50/50 transition-colors">
+                                            <td className="px-4 py-3 align-top">
+                                                <div className="font-mono text-xs font-bold text-gray-700">{r.requestId}</div>
+                                                <div className="text-[11px] text-gray-400 mt-0.5 whitespace-nowrap">{fmtDate(r.createdAt)}</div>
+                                            </td>
+                                            <td className="px-4 py-3 align-top">
+                                                <div className="font-semibold text-gray-800">{r.name}</div>
+                                                <div className="text-xs text-gray-500 mt-0.5">{r.phone}</div>
+                                            </td>
+                                            <td className="px-4 py-3 align-top">
+                                                <div className="font-semibold text-gray-800 line-clamp-1">{r.serviceTitle || 'N/A'}</div>
+                                                <div className="text-[11px] text-gray-500 mt-0.5 line-clamp-1" title={`${area}${r.address ? ` — ${r.address}` : ''}`}>
+                                                    {area}{r.address ? ` — ${r.address}` : ''}
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-3 align-top">
+                                                <select
+                                                    value={r.status}
+                                                    onChange={(e) => onUpdateStatus(r._id, e.target.value)}
+                                                    className={`text-[11px] font-bold px-2 py-1 rounded-md border outline-none cursor-pointer ${badgeCls(r.status)}`}
+                                                >
+                                                    {STATUSES.map((sx) => <option key={sx.key} value={sx.key}>{sx.label}</option>)}
+                                                </select>
+                                            </td>
+                                            <td className="px-4 py-3 align-top text-right">
+                                                <a 
+                                                    href={`${linkPrefix}/${r._id}`}
+                                                    className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gray-50 text-gray-500 hover:bg-[var(--color-primary-lightest)] hover:text-[var(--color-primary)] border border-gray-100 transition-colors"
+                                                    title="View Details"
+                                                >
+                                                    <LuEye size={15} />
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             )}
         </div>

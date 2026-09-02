@@ -98,57 +98,73 @@ export default function SiteContentPage() {
     }
 
     return (
-        <div>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
             {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
                 <div>
-                    <h1 style={{ fontSize: '18px', fontWeight: 800, color: '#111', margin: 0 }}>Site Content</h1>
-                    <p style={{ fontSize: '12px', color: '#888', margin: '2px 0 0' }}>Manage dynamic content across your website</p>
+                    <h1 style={{ fontSize: '20px', fontWeight: 800, color: '#111', margin: 0 }}>Site Content</h1>
+                    <p style={{ fontSize: '13px', color: '#666', margin: '4px 0 0' }}>Manage dynamic content across your website</p>
                 </div>
-                <button onClick={handleSave} disabled={isSaving} style={{ ...btnPrimary, opacity: isSaving ? 0.6 : 1 }}>
-                    {saveSuccess ? <><LuCircleCheck size={14} /> Saved!</> : <><LuSave size={14} /> {isSaving ? 'Saving...' : 'Save Changes'}</>}
+                <button onClick={handleSave} disabled={isSaving} style={{ ...btnPrimary, opacity: isSaving ? 0.6 : 1, padding: '10px 20px' }}>
+                    {saveSuccess ? <><LuCircleCheck size={16} /> Saved!</> : <><LuSave size={16} /> {isSaving ? 'Saving...' : 'Save Changes'}</>}
                 </button>
             </div>
 
-            {/* Tab Navigation */}
-            <div style={{ display: 'flex', gap: '4px', marginBottom: '20px', flexWrap: 'wrap', borderBottom: '1px solid #eee', paddingBottom: '1px' }}>
-                {TABS.map(tab => (
-                    <button
-                        key={tab.key}
-                        onClick={() => setActiveTab(tab.key)}
-                        style={{
-                            display: 'flex', alignItems: 'center', gap: '6px',
-                            padding: '8px 14px', border: 'none', cursor: 'pointer',
-                            fontSize: '12.5px', fontWeight: activeTab === tab.key ? 700 : 500,
-                            color: activeTab === tab.key ? 'var(--color-primary)' : '#888',
-                            background: activeTab === tab.key ? 'var(--color-primary-lightest)' : 'transparent',
-                            borderRadius: '6px 6px 0 0',
-                            borderBottom: activeTab === tab.key ? '2px solid var(--color-primary)' : '2px solid transparent',
-                            transition: 'all 0.15s',
-                        }}
-                    >
-                        <tab.icon size={14} />
-                        {tab.label}
-                    </button>
-                ))}
-            </div>
+            <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
+                {/* Left Sidebar (Vertical Tabs) */}
+                <div style={{ 
+                    width: '240px', 
+                    flexShrink: 0, 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    gap: '4px',
+                    background: '#fff',
+                    border: '1px solid #eee',
+                    borderRadius: '12px',
+                    padding: '12px',
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.02)'
+                }}>
+                    {TABS.map(tab => (
+                        <button
+                            key={tab.key}
+                            onClick={() => setActiveTab(tab.key)}
+                            style={{
+                                display: 'flex', alignItems: 'center', gap: '10px',
+                                padding: '10px 14px', border: 'none', cursor: 'pointer',
+                                fontSize: '13px', fontWeight: activeTab === tab.key ? 700 : 500,
+                                color: activeTab === tab.key ? 'var(--color-primary)' : '#555',
+                                background: activeTab === tab.key ? 'var(--color-primary-lightest)' : 'transparent',
+                                borderRadius: '8px',
+                                transition: 'all 0.15s',
+                                textAlign: 'left',
+                                width: '100%',
+                            }}
+                        >
+                            <tab.icon size={16} />
+                            {tab.label}
+                        </button>
+                    ))}
+                </div>
 
-            {/* Tab Content */}
-            {activeTab === 'hero' && <HeroSlidesTab data={formData} setData={setFormData} onSave={handleSave} isSaving={isSaving} />}
-            {activeTab === 'stats' && <StatsBarTab data={formData} setData={setFormData} />}
-            {activeTab === 'about' && <AboutSectionTab data={formData} setData={setFormData} />}
-            {activeTab === 'services' && <ServicesSectionTab data={formData} setData={setFormData} />}
-            {activeTab === 'serviceCompanies' && <ServiceCompaniesSectionTab data={formData} setData={setFormData} />}
-            {activeTab === 'features' && <FeaturesSectionTab data={formData} setData={setFormData} />}
-            {activeTab === 'catShowcase' && <CategoryShowcaseTab data={formData} setData={setFormData} />}
-            {activeTab === 'howItWorks' && <HowItWorksTab data={formData} setData={setFormData} />}
-            {activeTab === 'experience' && <ExperienceSectionTab data={formData} setData={setFormData} />}
-            {activeTab === 'reviews' && <ReviewsSectionTab data={formData} setData={setFormData} />}
-            {activeTab === 'contact' && <ContactTab data={formData} setData={setFormData} />}
-            {activeTab === 'payment' && <PaymentTab data={formData} setData={setFormData} />}
-            {activeTab === 'floating' && <FloatingTab data={formData} setData={setFormData} />}
-            {activeTab === 'footer' && <FooterTab data={formData} setData={setFormData} />}
-            {activeTab === 'legal' && <LegalPagesTab />}
+                {/* Right Content Area */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                    {activeTab === 'hero' && <HeroSlidesTab data={formData} setData={setFormData} onSave={handleSave} isSaving={isSaving} />}
+                    {activeTab === 'stats' && <StatsBarTab data={formData} setData={setFormData} />}
+                    {activeTab === 'about' && <AboutSectionTab data={formData} setData={setFormData} />}
+                    {activeTab === 'services' && <ServicesSectionTab data={formData} setData={setFormData} />}
+                    {activeTab === 'serviceCompanies' && <ServiceCompaniesSectionTab data={formData} setData={setFormData} />}
+                    {activeTab === 'features' && <FeaturesSectionTab data={formData} setData={setFormData} />}
+                    {activeTab === 'catShowcase' && <CategoryShowcaseTab data={formData} setData={setFormData} />}
+                    {activeTab === 'howItWorks' && <HowItWorksTab data={formData} setData={setFormData} />}
+                    {activeTab === 'experience' && <ExperienceSectionTab data={formData} setData={setFormData} />}
+                    {activeTab === 'reviews' && <ReviewsSectionTab data={formData} setData={setFormData} />}
+                    {activeTab === 'contact' && <ContactTab data={formData} setData={setFormData} />}
+                    {activeTab === 'payment' && <PaymentTab data={formData} setData={setFormData} />}
+                    {activeTab === 'floating' && <FloatingTab data={formData} setData={setFormData} />}
+                    {activeTab === 'footer' && <FooterTab data={formData} setData={setFormData} />}
+                    {activeTab === 'legal' && <LegalPagesTab />}
+                </div>
+            </div>
         </div>
     );
 }

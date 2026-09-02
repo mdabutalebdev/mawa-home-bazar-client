@@ -315,13 +315,13 @@ export default function OrdersPage() {
             )}
 
             {/* Orders Table */}
-            <div className="bg-white rounded-md shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-white rounded-md border border-gray-200 overflow-hidden">
                 {/* Desktop / tablet: table */}
                 <div className="hidden lg:block overflow-x-auto">
                     <table className="w-full text-left">
                         <thead className="bg-gray-50 border-b border-gray-100">
                             <tr>
-                                <th className="px-6 py-4 w-12">
+                                <th className="px-4 py-3 w-10">
                                     <input
                                         type="checkbox"
                                         aria-label="Select all orders on this page"
@@ -331,42 +331,43 @@ export default function OrdersPage() {
                                         className="w-4 h-4 rounded border-gray-300 cursor-pointer accent-[var(--color-primary)]"
                                     />
                                 </th>
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Order</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Customer</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Items</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Total</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Payment</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
-                                <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                                <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Order</th>
+                                <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                                <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
+                                <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                                <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
+                                <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100 italicContent">
+                        <tbody className="divide-y divide-gray-100 text-sm">
                             {isLoading ? (
                                 [...Array(limit)].map((_, i) => (
                                     <tr key={i} className="animate-pulse">
-                                        <td className="px-6 py-4"><div className="h-4 w-4 bg-gray-100 rounded"></div></td>
-                                        <td className="px-6 py-4"><div className="h-4 bg-gray-100 rounded w-24"></div></td>
-                                        <td className="px-6 py-4"><div className="h-4 bg-gray-100 rounded w-32"></div></td>
-                                        <td className="px-6 py-4"><div className="h-4 bg-gray-100 rounded w-20"></div></td>
-                                        <td className="px-6 py-4"><div className="h-4 bg-gray-100 rounded w-16"></div></td>
-                                        <td className="px-6 py-4"><div className="h-4 bg-gray-100 rounded w-16"></div></td>
-                                        <td className="px-6 py-4"><div className="h-4 bg-gray-100 rounded w-20"></div></td>
-                                        <td className="px-6 py-4"><div className="h-4 bg-gray-100 rounded w-24"></div></td>
-                                        <td className="px-6 py-4"><div className="h-4 bg-gray-100 rounded w-10 ml-auto"></div></td>
+                                        <td className="px-4 py-3"><div className="h-4 w-4 bg-gray-100 rounded"></div></td>
+                                        <td className="px-4 py-3"><div className="h-4 bg-gray-100 rounded w-24"></div></td>
+                                        <td className="px-4 py-3"><div className="h-4 bg-gray-100 rounded w-32"></div></td>
+                                        <td className="px-4 py-3"><div className="h-4 bg-gray-100 rounded w-32"></div></td>
+                                        <td className="px-4 py-3"><div className="h-4 bg-gray-100 rounded w-20"></div></td>
+                                        <td className="px-4 py-3"><div className="h-4 bg-gray-100 rounded w-16"></div></td>
+                                        <td className="px-4 py-3"><div className="h-4 bg-gray-100 rounded w-16"></div></td>
+                                        <td className="px-4 py-3"><div className="h-4 bg-gray-100 rounded w-20"></div></td>
+                                        <td className="px-4 py-3"><div className="h-4 bg-gray-100 rounded w-24"></div></td>
+                                        <td className="px-4 py-3"><div className="h-4 bg-gray-100 rounded w-10 ml-auto"></div></td>
                                     </tr>
                                 ))
                             ) : orders.length === 0 ? (
                                 <tr>
-                                    <td colSpan={9} className="px-6 py-12 text-center">
-                                        <LuPackage size={48} className="mx-auto text-gray-200 mb-4" />
-                                        <p className="text-gray-500">No orders found matching your filters</p>
+                                    <td colSpan={9} className="px-4 py-10 text-center">
+                                        <LuPackage size={36} className="mx-auto text-gray-300 mb-2" />
+                                        <p className="text-gray-500 text-sm">No orders found matching your filters</p>
                                     </td>
                                 </tr>
                             ) : (
                                 orders.map((order: any) => (
                                     <tr key={order._id} className={`transition-colors group ${selected.has(order._id) ? 'bg-[var(--color-primary)]/5' : 'hover:bg-gray-50/50'}`}>
-                                        <td className="px-6 py-4">
+                                        <td className="px-4 py-3">
                                             <input
                                                 type="checkbox"
                                                 aria-label="Select order"
@@ -375,38 +376,35 @@ export default function OrdersPage() {
                                                 className="w-4 h-4 rounded border-gray-300 cursor-pointer accent-[var(--color-primary)]"
                                             />
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <p className="font-semibold text-[var(--color-primary)]">{order.orderId || order.orderNumber}</p>
-                                            <div className="mt-1">
-                                                <PaymentMethodBadge method={order.paymentMethod} />
-                                            </div>
+                                        <td className="px-4 py-3">
+                                            <p className="font-medium text-[var(--color-primary)]">{order.orderId || order.orderNumber}</p>
                                             {order.transactionId && (
-                                                <p className="text-[10px] text-gray-400 font-mono mt-1 truncate max-w-[100px]" title={order.transactionId}>
+                                                <p className="text-[10px] text-gray-400 font-mono mt-0.5 truncate max-w-[100px]" title={order.transactionId}>
                                                     TxID: {order.transactionId}
                                                 </p>
                                             )}
                                         </td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-4 py-3">
                                             <p className="font-medium text-gray-800">
-                                                {order.user?.firstName} {order.user?.lastName}
+                                                {order.customerName || (order.user ? `${order.user?.firstName || ''} ${order.user?.lastName || ''}` : 'N/A')}
                                             </p>
-                                            <p className="text-xs text-gray-400">{order.user?.email}</p>
+                                            <p className="text-[11px] text-gray-500">{order.customerPhone || order.user?.phone}</p>
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <OrderItemsPreview items={order.items} totalCount={order.items?.length} />
+                                        <td className="px-4 py-3">
+                                            <p className="text-[13px] text-gray-600">{order.items?.length || 0} item{(order.items?.length || 0) > 1 ? 's' : ''}</p>
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <p className="font-bold text-gray-800">৳{order.total?.toLocaleString()}</p>
+                                        <td className="px-4 py-3">
+                                            <p className="font-medium text-gray-900">৳{order.total?.toLocaleString()}</p>
                                         </td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-4 py-3">
                                             <select
                                                 value={order.paymentStatus || 'pending'}
                                                 onChange={(e) => handlePaymentChange(order._id, e.target.value)}
-                                                className={`text-xs font-semibold px-2 py-1 rounded-md border-0 outline-none cursor-pointer transition-all ${
-                                                    order.paymentStatus === 'paid' ? 'bg-green-100 text-green-700' :
-                                                    order.paymentStatus === 'failed' ? 'bg-red-100 text-red-700' :
-                                                    order.paymentStatus === 'refunded' ? 'bg-purple-100 text-purple-700' :
-                                                    'bg-yellow-100 text-yellow-700'
+                                                className={`text-[11px] font-medium px-2 py-1 rounded border outline-none cursor-pointer transition-colors ${
+                                                    order.paymentStatus === 'paid' ? 'bg-green-50 text-green-700 border-green-200' :
+                                                    order.paymentStatus === 'failed' ? 'bg-red-50 text-red-700 border-red-200' :
+                                                    order.paymentStatus === 'refunded' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                                                    'bg-yellow-50 text-yellow-700 border-yellow-200'
                                                 }`}
                                             >
                                                 <option value="pending">Pending</option>
@@ -415,31 +413,31 @@ export default function OrdersPage() {
                                                 <option value="refunded">Refunded</option>
                                             </select>
                                         </td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-4 py-3">
                                             <select
                                                 value={order.status || 'pending'}
                                                 onChange={(e) => handleStatusChange(order._id, e.target.value)}
-                                                className={`text-xs font-semibold px-2 py-1 rounded-md border-0 outline-none cursor-pointer transition-all ${getStatusConfig(order.status).badgeBg} ${getStatusConfig(order.status).badgeText}`}
+                                                className={`text-[11px] font-medium px-2 py-1 rounded border outline-none cursor-pointer transition-colors ${getStatusConfig(order.status).badgeBg.replace('bg-', 'bg-').replace('-100', '-50')} ${getStatusConfig(order.status).badgeText} border-${getStatusConfig(order.status).badgeBg.split('-')[1]}-200`}
                                             >
                                                 {Object.entries(ORDER_STATUS_CONFIG).map(([key, cfg]) => (
                                                     <option key={key} value={key}>{cfg.label}</option>
                                                 ))}
                                             </select>
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <p className="text-sm text-gray-600">{formatDate(order.createdAt)}</p>
+                                        <td className="px-4 py-3">
+                                            <p className="text-[11px] text-gray-500">{formatDate(order.createdAt)}</p>
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center justify-end gap-2">
+                                        <td className="px-4 py-3 text-right">
+                                            <div className="flex items-center justify-end gap-1">
                                                 <Link
                                                     href={`/dashboard/admin/orders/${order._id}`}
-                                                    className="p-2 hover:bg-white hover:shadow-md rounded-md text-gray-400 hover:text-[var(--color-primary)] transition-all border border-transparent hover:border-gray-100"
+                                                    className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gray-50 text-gray-500 hover:bg-[var(--color-primary-lightest)] hover:text-[var(--color-primary)] border border-gray-100 transition-colors"
                                                     title="View Details"
                                                 >
-                                                    <LuEye size={18} />
+                                                    <LuEye size={15} />
                                                 </Link>
-                                                <button className="p-2 hover:bg-white hover:shadow-md rounded-md text-gray-400 hover:text-gray-600 transition-all border border-transparent hover:border-gray-100">
-                                                    <LuEllipsisVertical size={18} />
+                                                <button className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gray-50 text-gray-500 hover:bg-gray-100 border border-gray-100 transition-colors">
+                                                    <LuEllipsisVertical size={15} />
                                                 </button>
                                             </div>
                                         </td>
