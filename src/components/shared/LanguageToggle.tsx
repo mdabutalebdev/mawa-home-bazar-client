@@ -52,8 +52,8 @@ const LanguageToggle: React.FC<Props> = ({ variant = 'brand', className = '' }) 
                         aria-pressed={active}
                         aria-label={o.aria}
                         title={o.aria}
-                        // Full 44px target on phones; tightened once there is a mouse.
-                        className={`min-h-[44px] sm:min-h-[30px] min-w-[44px] sm:min-w-[38px] px-2 rounded-full text-[11.5px] font-bold leading-none flex items-center justify-center whitespace-nowrap transition-colors ${active ? activeCls : idleCls}`}
+                        // Compact on phones (still easily tappable); tightened once there is a mouse.
+                        className={`min-h-[30px] sm:min-h-[30px] min-w-[34px] sm:min-w-[38px] px-1.5 sm:px-2 rounded-full text-[11px] sm:text-[11.5px] font-bold leading-none flex items-center justify-center whitespace-nowrap transition-colors ${active ? activeCls : idleCls}`}
                         style={o.bangla ? { fontFamily: 'var(--font-bangla)' } : undefined}
                     >
                         {o.label}

@@ -10,6 +10,7 @@ import {
     useUpdateCompanyServiceMutation,
     useDeleteCompanyServiceMutation,
 } from '@/redux/api/companyServiceApi';
+import { SingleImageUploader } from '@/components/ui/ImageUploader';
 import { toast } from 'react-hot-toast';
 
 /* ─── Styles ─── */
@@ -24,28 +25,43 @@ const AdminServicesPage = () => {
     const [createService, { isLoading: isCreating }] = useCreateCompanyServiceMutation();
     const [updateService, { isLoading: isUpdating }] = useUpdateCompanyServiceMutation();
 
+    /* ─── Which kind of company is being managed ─── */
+    // 'service'         → "Our Company Services" homepage section
+    // 'product_company' → "Product Companies" (manufacturing / import-export) section
+    const [activeTab, setActiveTab] = useState<'service' | 'product_company'>('service');
+
     /* ─── Modal State ─── */
     const [modalOpen, setModalOpen] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
-    const [form, setForm] = useState({ title: '', description: '', image: '', isActive: true });
+    // The type of the row currently being edited (preserved on update).
+    const [editingType, setEditingType] = useState<'service' | 'product_company'>('service');
+    const [form, setForm] = useState({ title: '', titleBn: '', description: '', descriptionBn: '', image: '', isActive: true });
     /* per-field inline errors */
     const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
     const services = servicesData?.data || [];
     const isSaving = isCreating || isUpdating;
 
+    const isProductTab = activeTab === 'product_company';
+    // Labels change with the active tab so the same UI serves both kinds.
+    const entityLabel = isProductTab ? 'Product Company' : 'Service';
+
     const openCreate = () => {
         setEditingId(null);
-        setForm({ title: '', description: '', image: '', isActive: true });
+        setEditingType(activeTab);
+        setForm({ title: '', titleBn: '', description: '', descriptionBn: '', image: '', isActive: true });
         setFieldErrors({});
         setModalOpen(true);
     };
 
     const openEdit = (srv: any) => {
         setEditingId(srv._id);
+        setEditingType(srv.type === 'product_company' ? 'product_company' : 'service');
         setForm({
             title: srv.title || '',
+            titleBn: srv.titleBn || '',
             description: srv.description || '',
+            descriptionBn: srv.descriptionBn || '',
             image: srv.image || '',
             isActive: srv.isActive !== false,
         });
@@ -57,7 +73,7 @@ const AdminServicesPage = () => {
 
     const validate = (): Record<string, string> => {
         const errs: Record<string, string> = {};
-        if (!form.title.trim()) errs.title = 'Service title is required';
+        if (!form.title.trim()) errs.title = `${entityLabel} title is required`;
         return errs;
     };
 
@@ -72,18 +88,22 @@ const AdminServicesPage = () => {
 
         const payload: any = {
             title: form.title.trim(),
+            titleBn: form.titleBn.trim(),
             description: form.description,
+            descriptionBn: form.descriptionBn,
             image: form.image,
             isActive: form.isActive,
+            // New rows take the active tab's type; edits keep their original type.
+            type: editingId ? editingType : activeTab,
         };
 
         try {
             if (editingId) {
                 await updateService({ id: editingId, data: payload }).unwrap();
-                toast.success('Service updated');
+                toast.success(`${entityLabel} updated`);
             } else {
                 await createService(payload).unwrap();
-                toast.success('Service created');
+                toast.success(`${entityLabel} created`);
             }
             closeModal();
         } catch (error: any) {
@@ -100,27 +120,39 @@ const AdminServicesPage = () => {
     };
 
     const handleDelete = async (id: string) => {
-        if (window.confirm('Are you sure you want to delete this service?')) {
+        if (window.confirm(`Are you sure you want to delete this ${entityLabel.toLowerCase()}?`)) {
             try {
                 await deleteService(id).unwrap();
-                toast.success('Service deleted');
+                toast.success(`${entityLabel} deleted`);
             } catch (error: any) {
                 toast.error(error?.data?.message || 'Failed to delete');
             }
         }
     };
 
-    const filtered = services.filter((srv: any) =>
-        srv.title.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filtered = services.filter((srv: any) => {
+        const srvType = srv.type === 'product_company' ? 'product_company' : 'service';
+        if (srvType !== activeTab) return false;
+        const q = searchTerm.toLowerCase();
+        return (
+            srv.title.toLowerCase().includes(q) ||
+            (srv.titleBn || '').toLowerCase().includes(q)
+        );
+    });
 
     return (
         <div>
             {/* Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
                 <div>
-                    <h1 style={{ fontSize: '18px', fontWeight: 800, color: '#111', margin: 0 }}>Company Services</h1>
-                    <p style={{ fontSize: '12px', color: '#888', margin: '2px 0 0' }}>Manage global services for companies</p>
+                    <h1 style={{ fontSize: '18px', fontWeight: 800, color: '#111', margin: 0 }}>
+                        {isProductTab ? 'Product Companies' : 'Company Services'}
+                    </h1>
+                    <p style={{ fontSize: '12px', color: '#888', margin: '2px 0 0' }}>
+                        {isProductTab
+                            ? 'Manufacturing & import-export companies shown on the homepage'
+                            : 'Manage global services for companies'}
+                    </p>
                 </div>
                 <button onClick={openCreate} style={{
                     display: 'flex', alignItems: 'center', gap: '6px',
@@ -128,8 +160,35 @@ const AdminServicesPage = () => {
                     border: 'none', borderRadius: '7px', fontSize: '12.5px', fontWeight: 700,
                     cursor: 'pointer',
                 }}>
-                    <LuPlus size={14} /> Add Service
+                    <LuPlus size={14} /> Add {entityLabel}
                 </button>
+            </div>
+
+            {/* ─── Type Tabs ─── */}
+            <div style={{ display: 'flex', gap: '6px', marginBottom: '14px', borderBottom: '1.5px solid #f0f0f0' }}>
+                {([
+                    { key: 'service', label: 'Company Services', Icon: LuWrench },
+                    { key: 'product_company', label: 'Product Companies', Icon: LuLayoutGrid },
+                ] as const).map(({ key, label, Icon }) => {
+                    const active = activeTab === key;
+                    return (
+                        <button
+                            key={key}
+                            onClick={() => { setActiveTab(key); setSearchTerm(''); }}
+                            style={{
+                                display: 'flex', alignItems: 'center', gap: '6px',
+                                padding: '9px 16px', background: 'transparent',
+                                border: 'none', borderBottom: active ? '2.5px solid var(--color-primary)' : '2.5px solid transparent',
+                                marginBottom: '-1.5px', cursor: 'pointer',
+                                fontSize: '13px', fontWeight: 700,
+                                color: active ? 'var(--color-primary)' : '#888',
+                                transition: 'color 0.15s',
+                            }}
+                        >
+                            <Icon size={15} /> {label}
+                        </button>
+                    );
+                })}
             </div>
 
             {/* Search */}
@@ -137,7 +196,7 @@ const AdminServicesPage = () => {
                 <LuSearch size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#bbb' }} />
                 <input
                     type="text"
-                    placeholder="Search services..."
+                    placeholder={isProductTab ? 'Search product companies...' : 'Search services...'}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     style={{ ...inp, paddingLeft: '34px' }}
@@ -178,6 +237,9 @@ const AdminServicesPage = () => {
                                     <div>
                                         <p style={{ fontSize: '14px', fontWeight: 700, color: '#111', margin: 0, display: 'flex', alignItems: 'center', gap: '7px' }}>
                                             {srv.title}
+                                            {srv.titleBn && (
+                                                <span style={{ fontSize: '12px', fontWeight: 500, color: '#999' }}>· {srv.titleBn}</span>
+                                            )}
                                         </p>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px', flexWrap: 'wrap' }}>
                                             <span style={{ fontSize: '10.5px', color: '#aaa', fontFamily: 'monospace' }}>{srv.slug}</span>
@@ -188,6 +250,13 @@ const AdminServicesPage = () => {
                                                 color: srv.isActive ? '#16a34a' : '#dc2626',
                                             }}>
                                                 {srv.isActive ? 'Active' : 'Inactive'}
+                                            </span>
+                                            <span style={{
+                                                fontSize: '9px', fontWeight: 700,
+                                                padding: '1px 6px', borderRadius: '999px',
+                                                background: '#f1f5f9', color: '#475569',
+                                            }}>
+                                                {srv.productCount || 0} products
                                             </span>
                                         </div>
                                     </div>
@@ -229,14 +298,16 @@ const AdminServicesPage = () => {
                             boxShadow: 'inset 0 0 0 1px var(--color-primary-border)',
                             marginBottom: '18px',
                         }}>
-                            <LuWrench size={30} color="var(--color-primary)" />
+                            {isProductTab ? <LuLayoutGrid size={30} color="var(--color-primary)" /> : <LuWrench size={30} color="var(--color-primary)" />}
                         </div>
 
                         <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#111', margin: '0 0 6px' }}>
-                            No services yet
+                            {isProductTab ? 'No product companies yet' : 'No services yet'}
                         </h3>
-                        <p style={{ fontSize: '13px', color: '#94a3b8', margin: '0 0 22px', maxWidth: '320px', lineHeight: 1.5 }}>
-                            Services are global categories (like Plumber, Electrician) that companies can list under.
+                        <p style={{ fontSize: '13px', color: '#94a3b8', margin: '0 0 22px', maxWidth: '340px', lineHeight: 1.5 }}>
+                            {isProductTab
+                                ? 'Product companies (like Grocery, Beverage, Cosmetics) appear in the "Product Companies" section on the homepage. Add one, then assign products to it from the product form.'
+                                : 'Services are global categories (like Plumber, Electrician) that companies can list under.'}
                         </p>
 
                         <button onClick={openCreate} style={{
@@ -247,7 +318,7 @@ const AdminServicesPage = () => {
                             boxShadow: '0 6px 16px rgba(var(--color-primary-rgb),0.28)',
                             transition: 'transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease',
                         }}>
-                            <LuPlus size={16} strokeWidth={2.6} /> Add Service
+                            <LuPlus size={16} strokeWidth={2.6} /> Add {entityLabel}
                         </button>
                     </div>
                 )}
@@ -275,7 +346,7 @@ const AdminServicesPage = () => {
                             padding: '16px 20px', borderBottom: '1px solid #f0f0f0',
                         }}>
                             <h3 style={{ fontSize: '15px', fontWeight: 800, color: '#111', margin: 0 }}>
-                                {editingId ? 'Edit Service' : 'Add Service'}
+                                {editingId ? `Edit ${entityLabel}` : `Add ${entityLabel}`}
                             </h3>
                             <button onClick={closeModal} style={{
                                 width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -287,10 +358,10 @@ const AdminServicesPage = () => {
 
                         <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px', maxHeight: '70vh', overflowY: 'auto' }}>
                             <div>
-                                <label style={lbl}>Service Title <span style={{ color: '#ef4444' }}>*</span></label>
+                                <label style={lbl}>{entityLabel} Title (English) <span style={{ color: '#ef4444' }}>*</span></label>
                                 <input
                                     type="text"
-                                    placeholder="e.g. Electrician, Plumbing"
+                                    placeholder={isProductTab ? 'e.g. Grocery Products Company' : 'e.g. Electrician, Plumbing'}
                                     value={form.title}
                                     onChange={e => { setForm(p => ({ ...p, title: e.target.value })); if (fieldErrors.title) setFieldErrors(p => ({ ...p, title: '' })); }}
                                     style={{ ...inp, borderColor: fieldErrors.title ? '#fca5a5' : '#e5e7eb' }}
@@ -298,30 +369,45 @@ const AdminServicesPage = () => {
                                 />
                                 {fieldErrors.title && <p style={errStyle}>{fieldErrors.title}</p>}
                             </div>
-                            
+
                             <div>
-                                <label style={lbl}>Image URL <span style={{ color: '#aaa', fontWeight: 400 }}>(optional)</span></label>
+                                <label style={lbl}>Title (বাংলা) <span style={{ color: '#aaa', fontWeight: 400 }}>(optional — shown when site is in Bengali)</span></label>
                                 <input
                                     type="text"
-                                    placeholder="https://..."
-                                    value={form.image}
-                                    onChange={e => setForm(p => ({ ...p, image: e.target.value }))}
+                                    placeholder={isProductTab ? 'যেমন: মুদি মনোহারী কোম্পানির প্রোডাক্ট' : 'যেমন: ইলেকট্রিশিয়ান, প্লাম্বিং'}
+                                    value={form.titleBn}
+                                    onChange={e => setForm(p => ({ ...p, titleBn: e.target.value }))}
                                     style={inp}
                                 />
-                                {form.image && (
-                                    <div style={{ marginTop: '8px', width: '60px', height: '60px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #eee' }}>
-                                        <img src={form.image} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => (e.currentTarget.style.display = 'none')} />
-                                    </div>
-                                )}
+                            </div>
+
+                            {/* Direct file upload (click or drag) — uploads to the server and
+                                stores the returned URL, same as the product form. */}
+                            <SingleImageUploader
+                                label={`${entityLabel} Image (optional)`}
+                                value={form.image}
+                                onChange={(url) => setForm(p => ({ ...p, image: url }))}
+                                folder="company-services"
+                            />
+
+                            <div>
+                                <label style={lbl}>Description (English) <span style={{ color: '#aaa', fontWeight: 400 }}>(optional)</span></label>
+                                <textarea
+                                    placeholder="Short description..."
+                                    rows={2}
+                                    value={form.description}
+                                    onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
+                                    style={{ ...inp, resize: 'vertical' }}
+                                />
                             </div>
 
                             <div>
-                                <label style={lbl}>Description <span style={{ color: '#aaa', fontWeight: 400 }}>(optional)</span></label>
+                                <label style={lbl}>Description (বাংলা) <span style={{ color: '#aaa', fontWeight: 400 }}>(optional)</span></label>
                                 <textarea
-                                    placeholder="Short description..."
-                                    rows={3}
-                                    value={form.description}
-                                    onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
+                                    placeholder="সংক্ষিপ্ত বর্ণনা..."
+                                    rows={2}
+                                    value={form.descriptionBn}
+                                    onChange={e => setForm(p => ({ ...p, descriptionBn: e.target.value }))}
                                     style={{ ...inp, resize: 'vertical' }}
                                 />
                             </div>

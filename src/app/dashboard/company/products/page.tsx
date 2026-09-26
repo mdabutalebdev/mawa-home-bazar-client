@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
     LuPlus, LuSearch, LuX, LuPackage, LuPencil, LuTrash2, LuUpload,
     LuTriangleAlert, LuCircleCheck, LuClock, LuCircleX, LuBuilding2,
@@ -95,6 +96,7 @@ const categoryId = (c: Product['category']) =>
     (typeof c === 'object' && c ? c._id : (c as string)) || '';
 
 export default function CompanyProductsPage() {
+    const router = useRouter();
     const { user, isAuthenticated } = useAppSelector((s) => s.auth);
     const role = user?.role as string | undefined;
 
@@ -174,32 +176,14 @@ export default function CompanyProductsPage() {
         if (errors[k]) setErrors((e) => ({ ...e, [k]: '' }));
     };
 
+    // Add / edit now open the full-featured product form (same one the admin uses),
+    // at /dashboard/company/products/new (edit via ?id=).
     const openCreate = () => {
-        setEditing(null);
-        setForm(emptyForm);
-        setErrors({});
-        setModalOpen(true);
+        router.push('/dashboard/company/products/new');
     };
 
     const openEdit = (p: Product) => {
-        setEditing(p);
-        setForm({
-            name: p.name || '',
-            description: p.description || '',
-            price: p.price != null ? String(p.price) : '',
-            originalPrice: p.originalPrice != null ? String(p.originalPrice) : '',
-            wholesalePrice: p.wholesalePrice != null ? String(p.wholesalePrice) : '',
-            moq: p.moq != null ? String(p.moq) : '1',
-            stock: p.stock != null ? String(p.stock) : '0',
-            unit: p.unit || 'piece',
-            category: categoryId(p.category),
-            thumbnail: p.thumbnail || '',
-            images: p.images || [],
-            brand: p.brand || '',
-            tags: (p.tags || []).join(', '),
-        });
-        setErrors({});
-        setModalOpen(true);
+        router.push(`/dashboard/company/products/new?id=${p._id}`);
     };
 
     const closeModal = () => {

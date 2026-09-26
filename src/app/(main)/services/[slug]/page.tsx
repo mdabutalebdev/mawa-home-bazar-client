@@ -26,6 +26,7 @@ export default function ServiceStorefrontPage() {
 
     const { data: serviceRes, isLoading: serviceLoading, isError } = useGetCompanyServiceBySlugQuery(slug, { skip: !slug });
     const service = serviceRes?.data || null;
+    const isProductCompany = service?.type === 'product_company';
 
     /* ── Loading ── */
     if (serviceLoading) {
@@ -94,7 +95,7 @@ export default function ServiceStorefrontPage() {
                             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-[12px] text-gray-400 font-medium">
                                 <span className="inline-flex items-center gap-1">
                                     <LuWrench size={12} />
-                                    Company Service
+                                    {isProductCompany ? 'Product Company' : 'Company Service'}
                                 </span>
                             </div>
                         </div>
@@ -115,10 +116,17 @@ export default function ServiceStorefrontPage() {
 
                 {/* ══════════ PRODUCTS LISTING ══════════ */}
                 <div className="-mx-4 sm:-mx-6 -mt-2">
-                    <StoreListing 
-                        serviceId={service._id} 
-                        emptyTitle="No products listed under this service yet"
-                    />
+                    {isProductCompany ? (
+                        <StoreListing
+                            productCompanyId={service._id}
+                            emptyTitle="No products listed under this company yet"
+                        />
+                    ) : (
+                        <StoreListing
+                            serviceId={service._id}
+                            emptyTitle="No products listed under this service yet"
+                        />
+                    )}
                 </div>
             </div>
         </div>

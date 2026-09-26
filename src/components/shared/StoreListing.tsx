@@ -357,6 +357,8 @@ export interface StoreListingProps {
     companyId?: string;
     /** Optional service ID to restrict the listing to products from a specific service. */
     serviceId?: string;
+    /** Optional product-company ID to restrict the listing to a specific product company. */
+    productCompanyId?: string;
 }
 
 const StoreListing: React.FC<StoreListingProps> = ({
@@ -367,6 +369,7 @@ const StoreListing: React.FC<StoreListingProps> = ({
     emptyTitle = 'No products found',
     companyId,
     serviceId,
+    productCompanyId,
 }) => {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -438,8 +441,9 @@ const StoreListing: React.FC<StoreListingProps> = ({
         if (inStockOnly) p.inStock = 'true';
         if (companyId) p.company = companyId;
         if (serviceId) p.serviceId = serviceId;
+        if (productCompanyId) p.productCompanyId = productCompanyId;
         return p;
-    }, [page, sortBy, effectiveCategory, activeSearch, priceRange, selectedBrand, minRating, inStockOnly, companyId, serviceId]);
+    }, [page, sortBy, effectiveCategory, activeSearch, priceRange, selectedBrand, minRating, inStockOnly, companyId, serviceId, productCompanyId]);
 
     const { data, isFetching } = useGetProductsQuery(queryParams);
     const rawProducts = data?.data || [];

@@ -15,8 +15,9 @@ import {
     LuShieldCheck, LuRefreshCw, LuHandshake, LuBuilding2, LuStore, LuPlus,
     LuCheck, LuX, LuBan, LuMapPin, LuPhone, LuMail, LuPercent, LuIdCard,
     LuTriangleAlert, LuInbox, LuLoaderCircle, LuChevronLeft, LuChevronRight,
-    LuCalendar, LuUserCheck, LuFileText,
+    LuCalendar, LuUserCheck, LuFileText, LuEye,
 } from 'react-icons/lu';
+import Link from 'next/link';
 import { useAppSelector } from '@/redux';
 import {
     useGetDealersQuery,
@@ -103,6 +104,8 @@ interface DocRef {
 
 interface Row {
     id: string;
+    /** The linked login account's user id — used to edit email / reset password. */
+    userId: string;
     title: string;
     subtitle: string;
     holderName: string;
@@ -121,6 +124,7 @@ interface Row {
 const normalise = (kind: Kind, d: any): Row => {
     const base = {
         id: String(d?._id || ''),
+        userId: String(d?.user?._id || ''),
         holderName: fullName(d?.user),
         email: d?.user?.email || '',
         appliedAt: d?.createdAt || '',
@@ -516,44 +520,50 @@ export default function AdminPartnersPage() {
         const canSuspend = row.status === 'approved';
         const canReject = row.status !== 'rejected';
 
+        const iconBtn = 'w-10 h-10 flex items-center justify-center rounded-lg border transition-all disabled:opacity-60 shrink-0';
         return (
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center justify-end gap-1.5 flex-nowrap">
+                <Link
+                    href={`/dashboard/admin/partners/${tab}/${row.id}`}
+                    title="View full details"
+                    className="inline-flex items-center justify-center gap-1.5 min-h-[40px] px-3.5 rounded-lg bg-[var(--color-primary)] text-white text-xs font-bold hover:bg-[var(--color-primary-dark)] transition-all shrink-0"
+                >
+                    <LuEye size={14} /> Details
+                </Link>
                 {canApprove && (
                     <button
                         onClick={() => handleApprove(row)}
                         disabled={approving}
-                        className="inline-flex items-center justify-center gap-1.5 min-h-[44px] px-3.5 rounded-lg bg-emerald-500 text-white text-xs font-bold hover:bg-emerald-600 disabled:opacity-60 transition-all"
+                        title="Approve"
+                        className={`${iconBtn} bg-emerald-500 border-emerald-500 text-white hover:bg-emerald-600`}
                     >
-                        {approving ? <LuLoaderCircle size={14} className="animate-spin" /> : <LuCheck size={14} />}
-                        Approve
+                        {approving ? <LuLoaderCircle size={15} className="animate-spin" /> : <LuCheck size={15} />}
                     </button>
                 )}
                 {canReject && (
                     <button
                         onClick={() => openReject(row)}
-                        className="inline-flex items-center justify-center gap-1.5 min-h-[44px] px-3.5 rounded-lg bg-white border border-red-200 text-red-600 text-xs font-bold hover:bg-red-50 transition-all"
+                        title="Reject"
+                        className={`${iconBtn} bg-white border-red-200 text-red-600 hover:bg-red-50`}
                     >
-                        <LuX size={14} /> Reject
+                        <LuX size={15} />
                     </button>
                 )}
                 {canSuspend && (
                     <button
                         onClick={() => handleSuspend(row)}
                         disabled={suspending}
-                        className="inline-flex items-center justify-center gap-1.5 min-h-[44px] px-3.5 rounded-lg bg-white border border-orange-200 text-orange-600 text-xs font-bold hover:bg-orange-50 disabled:opacity-60 transition-all"
+                        title="Suspend"
+                        className={`${iconBtn} bg-white border-orange-200 text-orange-600 hover:bg-orange-50`}
                     >
-                        {suspending ? <LuLoaderCircle size={14} className="animate-spin" /> : <LuBan size={14} />}
-                        Suspend
+                        {suspending ? <LuLoaderCircle size={15} className="animate-spin" /> : <LuBan size={15} />}
                     </button>
-                )}
-                {!canApprove && !canSuspend && !canReject && (
-                    <span className="text-xs text-gray-400 italic">No action left</span>
                 )}
             </div>
         );
     };
 
-    const columns = showCommission ? 7 : 6;
+    const columns = showCommission ? 5 : 4;
 
     const emptyCopy =
         status === 'pending'
@@ -666,11 +676,9 @@ export default function AdminPartnersPage() {
                                 <th className="px-5 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Applicant</th>
                                 <th className="px-5 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Account holder</th>
                                 <th className="px-5 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Area</th>
-                                <th className="px-5 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Documents</th>
                                 {showCommission && (
                                     <th className="px-5 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Commission</th>
                                 )}
-                                <th className="px-5 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Applied</th>
                                 <th className="px-5 py-4 text-right text-[11px] font-bold text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
@@ -697,7 +705,12 @@ export default function AdminPartnersPage() {
                                 rows.map((row) => (
                                     <tr key={row.id} className="hover:bg-gray-50/50 transition-colors align-top">
                                         <td className="px-5 py-5">
-                                            <p className="text-sm font-bold text-gray-900">{row.title}</p>
+                                            <Link
+                                                href={`/dashboard/admin/partners/${tab}/${row.id}`}
+                                                className="text-left text-sm font-bold text-gray-900 hover:text-[var(--color-primary)] hover:underline transition-colors"
+                                            >
+                                                {row.title}
+                                            </Link>
                                             {row.subtitle && (
                                                 <p className="text-[11px] text-gray-400 mt-0.5 max-w-[220px]">{row.subtitle}</p>
                                             )}
@@ -708,18 +721,11 @@ export default function AdminPartnersPage() {
                                                 </p>
                                             )}
                                         </td>
-                                        <td className="px-5 py-5 max-w-[200px]"><HolderCell row={row} /></td>
+                                        <td className="px-5 py-5 max-w-[220px]"><HolderCell row={row} /></td>
                                         <td className="px-5 py-5 max-w-[180px]"><AreaCell row={row} /></td>
-                                        <td className="px-5 py-5"><DocChips docs={row.docs} /></td>
                                         {showCommission && (
                                             <td className="px-5 py-5">{renderCommission(row)}</td>
                                         )}
-                                        <td className="px-5 py-5">
-                                            <span className="inline-flex items-center gap-1.5 text-xs text-gray-500 whitespace-nowrap">
-                                                <LuCalendar size={12} className="text-gray-300" />
-                                                {formatDate(row.appliedAt)}
-                                            </span>
-                                        </td>
                                         <td className="px-5 py-5">
                                             <div className="flex justify-end">{renderActions(row)}</div>
                                         </td>
@@ -751,7 +757,12 @@ export default function AdminPartnersPage() {
                             <div key={row.id} className="p-4 space-y-3.5">
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="min-w-0">
-                                        <p className="text-[15px] font-bold text-gray-900 break-words">{row.title}</p>
+                                        <Link
+                                            href={`/dashboard/admin/partners/${tab}/${row.id}`}
+                                            className="text-left text-[15px] font-bold text-gray-900 break-words hover:text-[var(--color-primary)] transition-colors"
+                                        >
+                                            {row.title}
+                                        </Link>
                                         {row.subtitle && <p className="text-[11px] text-gray-400 mt-0.5">{row.subtitle}</p>}
                                     </div>
                                     <StatusPill status={row.status} />
@@ -895,6 +906,7 @@ export default function AdminPartnersPage() {
                     onCreated={() => { setStatus('approved'); setPage(1); active.refetch(); }}
                 />
             )}
+
         </div>
     );
 }

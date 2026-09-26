@@ -52,10 +52,11 @@ const ServicesSection: React.FC = () => {
                             <Link
                                 key={i}
                                 href={`/service-request?service=${i}`}
-                                className="group block rounded-2xl bg-white border border-gray-200 overflow-hidden hover:border-[var(--color-primary)]/40 transition-colors"
+                                className="group block rounded-lg bg-white border border-gray-200 overflow-hidden hover:border-[var(--color-primary)]/40 transition-colors"
                             >
-                                {/* Image / branded fallback — wide & short (height ≈ 43% of width). */}
-                                <div className="relative aspect-[21/9] bg-slate-50 overflow-hidden">
+                                {/* Image / branded fallback — taller on mobile (4:3) for a bigger,
+                                    more compact card; stays wide & short (21:9) on desktop. */}
+                                <div className="relative aspect-[4/3] sm:aspect-[21/9] bg-slate-50 overflow-hidden">
                                     {image ? (
                                         // eslint-disable-next-line @next/next/no-img-element
                                         <img
@@ -80,17 +81,17 @@ const ServicesSection: React.FC = () => {
 
                                 {/* Optional caption — an image-only card shows just a thin request bar */}
                                 {(title || description) ? (
-                                    <div className="p-3 sm:p-4">
-                                        {title && <h3 className="text-[13px] sm:text-base font-bold text-gray-900 leading-tight">{title}</h3>}
+                                    <div className="p-2 sm:p-4">
+                                        {title && <h3 className="text-[13px] sm:text-base font-bold text-gray-900 leading-tight line-clamp-1">{title}</h3>}
                                         {description && (
-                                            <p className="mt-1 text-[11px] sm:text-sm text-gray-500 leading-snug line-clamp-2">{description}</p>
+                                            <p className="mt-0.5 text-[11px] sm:text-sm text-gray-500 leading-snug line-clamp-2">{description}</p>
                                         )}
-                                        <span className="mt-2 inline-flex items-center gap-1 text-[11px] sm:text-xs font-bold text-[var(--color-primary)]">
+                                        <span className="mt-1 sm:mt-2 inline-flex items-center gap-1 text-[11px] sm:text-xs font-bold text-[var(--color-primary)]">
                                             {isBn ? 'রিকোয়েস্ট করুন' : 'Request now'} <LuArrowRight size={13} />
                                         </span>
                                     </div>
                                 ) : (
-                                    <div className="px-3 py-2.5 text-center text-[11px] sm:text-xs font-bold text-[var(--color-primary)]">
+                                    <div className="px-2 py-2 sm:px-3 sm:py-2.5 text-center text-[11px] sm:text-xs font-bold text-[var(--color-primary)]">
                                         {isBn ? 'রিকোয়েস্ট করুন →' : 'Request now →'}
                                     </div>
                                 )}

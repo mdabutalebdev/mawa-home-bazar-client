@@ -18,6 +18,10 @@ import {
     useUpdateProductMutation,
     useGetProductByIdQuery
 } from '@/redux/api/productApi';
+import {
+    useCreateMyCompanyProductMutation,
+    useUpdateMyCompanyProductMutation,
+} from '@/redux/api/companyApi';
 import { useGetCategoriesQuery } from '@/redux/api/categoryApi';
 import { useGetCompanyServicesQuery } from '@/redux/api/companyServiceApi';
 import { toast } from 'react-hot-toast';
@@ -51,18 +55,35 @@ const SectionHeader = ({ icon, title, color = 'bg-blue-50 text-blue-600' }: any)
     </div>
 );
 
-const ProductFormInner = ({ productId: propProductId }: { productId?: string }) => {
+const ProductFormInner = ({ productId: propProductId, variant = 'admin' }: { productId?: string; variant?: 'admin' | 'company' }) => {
     const router = useRouter();
     const searchParams = useSearchParams();
     const productId = propProductId || searchParams.get('id');
     const isEditing = !!productId;
-    const listHref = '/dashboard/admin/products';
+    const isCompany = variant === 'company';
+    const listHref = isCompany ? '/dashboard/company/products' : '/dashboard/admin/products';
 
-    const [createProduct, { isLoading: isCreating }] = useCreateProductMutation();
-    const [updateProduct, { isLoading: isUpdating }] = useUpdateProductMutation();
+    // Both mutation sets are created (hook rules), then the active variant is picked.
+    // The company endpoints auto-set company + approvalStatus:'pending' and strip
+    // admin-only fields server-side, so the same rich form is safe for both roles.
+    const [adminCreate, { isLoading: adminCreating }] = useCreateProductMutation();
+    const [adminUpdate, { isLoading: adminUpdating }] = useUpdateProductMutation();
+    const [companyCreate, { isLoading: companyCreating }] = useCreateMyCompanyProductMutation();
+    const [companyUpdate, { isLoading: companyUpdating }] = useUpdateMyCompanyProductMutation();
+    const createProduct = isCompany ? companyCreate : adminCreate;
+    const updateProduct = isCompany ? companyUpdate : adminUpdate;
+    const isCreating = isCompany ? companyCreating : adminCreating;
+    const isUpdating = isCompany ? companyUpdating : adminUpdating;
+
     const { data: productToEdit, isLoading: isFetching } = useGetProductByIdQuery(productId, { skip: !isEditing });
     const { data: categoriesData } = useGetCategoriesQuery({});
     const { data: servicesData } = useGetCompanyServicesQuery({});
+    // Split the company-services list by type so each dropdown shows only its own kind:
+    //  - "service"          → "Our Company Services" section
+    //  - "product_company"  → "Product Companies" (manufacturing / import-export) section
+    const allCompanyServices = servicesData?.data || [];
+    const serviceOptions = allCompanyServices.filter((s: any) => (s.type || 'service') === 'service');
+    const productCompanyOptions = allCompanyServices.filter((s: any) => s.type === 'product_company');
 
     const [formData, setFormData] = useState<any>({
         // Basic
@@ -76,7 +97,7 @@ const ProductFormInner = ({ productId: propProductId }: { productId?: string }) 
         // Media
         thumbnail: '', images: [],
         // Organization
-        category: '', subCategory: '', serviceId: '',
+        category: '', subCategory: '', serviceId: '', productCompanyId: '',
         // Specs (new)
         insideTheBox: '',
         compatibility: '',
@@ -131,6 +152,7 @@ const ProductFormInner = ({ productId: propProductId }: { productId?: string }) 
                 category: prod.category?._id || prod.category || '',
                 subCategory: prod.subCategory?._id || prod.subCategory || '',
                 serviceId: prod.serviceId?._id || prod.serviceId || '',
+                productCompanyId: prod.productCompanyId?._id || prod.productCompanyId || '',
                 brand: prod.brand || '',
                 model: prod.model || '',
                 weight: prod.weight ?? '',
@@ -312,7 +334,10 @@ const ProductFormInner = ({ productId: propProductId }: { productId?: string }) 
         try {
             const payload = { ...formData };
             if (!payload.subCategory) delete payload.subCategory;
-            if (!payload.serviceId) delete payload.serviceId;
+            // Send explicit null (not omit) when cleared, so choosing "None" on edit
+            // actually un-links the product from its service / product company.
+            payload.serviceId = payload.serviceId || null;
+            payload.productCompanyId = payload.productCompanyId || null;
 
             // ── Convert raw string numeric fields → Number (no NaN leaks into payload) ──
             // Required number (price): empty → 0 (validation already guards > 0).
@@ -479,7 +504,18 @@ const ProductFormInner = ({ productId: propProductId }: { productId?: string }) 
                                     value={formData.serviceId}
                                     onChange={(e) => { clearError('serviceId'); setFormData((prev: any) => ({ ...prev, serviceId: e.target.value })); }}>
                                     <option value="">Select Service (None)</option>
-                                    {(servicesData?.data || []).map((srv: any) => (<option key={srv._id} value={srv._id}>{srv.title}</option>))}
+                                    {serviceOptions.map((srv: any) => (<option key={srv._id} value={srv._id}>{srv.title}</option>))}
+                                </select>
+                            </div>
+                            {/* Product Company — links this product to a manufacturing / import-export
+                                company shown in the "Product Companies" homepage section. */}
+                            <div className="space-y-1.5" data-field="productCompanyId">
+                                <label className="text-[13px] font-medium text-gray-700">Product Company <span className="text-xs text-gray-400">(optional)</span></label>
+                                <select name="productCompanyId" className={`w-full px-3.5 py-2.5 bg-white border rounded-md text-sm outline-none cursor-pointer ${errors.productCompanyId ? 'border-red-400 bg-red-50/30' : 'border-gray-200 focus:border-[var(--color-primary)]'}`}
+                                    value={formData.productCompanyId}
+                                    onChange={(e) => { clearError('productCompanyId'); setFormData((prev: any) => ({ ...prev, productCompanyId: e.target.value })); }}>
+                                    <option value="">Select Product Company (None)</option>
+                                    {productCompanyOptions.map((pc: any) => (<option key={pc._id} value={pc._id}>{pc.titleBn ? `${pc.title} — ${pc.titleBn}` : pc.title}</option>))}
                                 </select>
                             </div>
                         </div>
@@ -1068,10 +1104,16 @@ const ProductFormInner = ({ productId: propProductId }: { productId?: string }) 
                     <div className="bg-white p-5 rounded-md border border-gray-200 space-y-4">
                         <h3 className="font-semibold text-gray-800 flex items-center gap-2"><LuSettings className="text-[var(--color-primary)]" /> Visibility & Status</h3>
                         <div className="space-y-2">
-                            <Toggle label="Featured Product" name="isFeatured" checked={formData.isFeatured} onChange={handleChange} color="bg-yellow-500" />
+                            {/* Featured / Top Selling are home-page merchandising the owner controls,
+                                so they are hidden for a company (the server ignores them anyway). */}
+                            {!isCompany && (
+                                <Toggle label="Featured Product" name="isFeatured" checked={formData.isFeatured} onChange={handleChange} color="bg-yellow-500" />
+                            )}
                             <Toggle label="On Sale" name="isOnSale" checked={formData.isOnSale} onChange={handleChange} color="bg-rose-500" />
                             <Toggle label="New Arrival" name="isNewProduct" checked={formData.isNewProduct} onChange={handleChange} color="bg-emerald-500" />
-                            <Toggle label="Top Selling (হোম পেজে দেখাবে)" name="isBestSelling" checked={formData.isBestSelling} onChange={handleChange} color="bg-orange-500" />
+                            {!isCompany && (
+                                <Toggle label="Top Selling (হোম পেজে দেখাবে)" name="isBestSelling" checked={formData.isBestSelling} onChange={handleChange} color="bg-orange-500" />
+                            )}
                         </div>
                         <div className="pt-2">
                             <label className="text-[11px] font-semibold text-gray-500 uppercase block mb-2">Status</label>
@@ -1142,7 +1184,7 @@ const ProductFormInner = ({ productId: propProductId }: { productId?: string }) 
     );
 };
 
-export const ProductForm = (props: { productId?: string }) => (
+export const ProductForm = (props: { productId?: string; variant?: 'admin' | 'company' }) => (
     <Suspense fallback={<div className="p-20 text-center text-[var(--color-primary)] font-bold animate-pulse">Loading Product Form...</div>}>
         <ProductFormInner {...props} />
     </Suspense>

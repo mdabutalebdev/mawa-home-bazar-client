@@ -10,7 +10,9 @@ export const companyServiceApi = baseApi.injectEndpoints({
                     method: 'GET',
                 };
             },
-            providesTags: ['companyService'],
+            // Same tag as the admin list so any create/update/delete refreshes the
+            // public homepage sections + the product-form dropdowns too.
+            providesTags: ['CompanyServices'],
         }),
         getAdminCompanyServices: builder.query({
             query: () => '/company-services/admin/all',

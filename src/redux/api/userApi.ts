@@ -111,6 +111,28 @@ export const userApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: ['Users'],
         }),
+        // Admin: read a user's login email + admin-visible password copy.
+        getAdminUserCredentials: builder.query({
+            query: (id) => ({
+                url: `/users/admin/${id}/credentials`,
+                method: 'GET',
+            }),
+            providesTags: (result, error, id) => [{ type: 'Users', id: `creds-${id}` }],
+        }),
+        // Admin: change a user's login email and/or reset their password.
+        adminUpdateCredentials: builder.mutation({
+            query: ({ id, ...data }) => ({
+                url: `/users/admin/${id}/credentials`,
+                method: 'PATCH',
+                body: data,
+            }),
+            // Partner lists show the user's email, so refresh them too, plus this
+            // user's own credential cache.
+            invalidatesTags: (result, error, arg) => [
+                'Users', 'Dealers', 'Companies', 'Retailers', 'Partners',
+                { type: 'Users', id: `creds-${arg?.id}` },
+            ],
+        }),
         deleteUser: builder.mutation({
             query: (id) => ({
                 url: `/users/admin/${id}`,
@@ -138,6 +160,8 @@ export const {
     useGetAdminUserByIdQuery,
     useGetAdminUserStatsQuery,
     useUpdateUserMutation,
+    useGetAdminUserCredentialsQuery,
+    useAdminUpdateCredentialsMutation,
     useDeleteUserMutation,
 } = userApi;
 
